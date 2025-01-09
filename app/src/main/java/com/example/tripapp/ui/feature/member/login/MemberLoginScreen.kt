@@ -44,12 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.tripapp.R
-import com.example.tripapp.ui.feature.member.MemberLoginViewModelFactory
 import com.example.tripapp.ui.feature.member.signup.MEMBER_SIGNUP_ROUTE
-import com.example.tripapp.ui.feature.member.signup.MemberSignUpRoute
-import com.example.tripapp.ui.feature.member.signup.MemberSignUpViewModel
-import com.example.tripapp.ui.feature.member.signup.genMemberSignUpNavigationRoute
-import com.example.tripapp.ui.feature.member.turfav.TUR_FAV_ROUTE
 import com.example.tripapp.ui.feature.trip.plan.home.PLAN_HOME_ROUTE
 import com.example.tripapp.ui.theme.black600
 import com.example.tripapp.ui.theme.purple200
@@ -62,7 +57,6 @@ private val tag = "tag_LoginScreen"
 
 @Composable
 fun MemberLoginRoute(
-    viewModel: MemberLoginViewModel = viewModel(),
     navController: NavHostController
 ) {
     val context = LocalContext.current // 取得 Context

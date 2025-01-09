@@ -3,6 +3,7 @@ package com.example.tripapp.ui.feature.member.login
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.tripapp.ui.feature.member.LoginRequest
 import com.example.tripapp.ui.feature.member.Member
@@ -17,7 +18,7 @@ import kotlinx.coroutines.launch
 class MemberLoginViewModel(context: Context) : ViewModel() {
     private val tag = "tag_LoginVM"
 
-    private val memberRepository = MemberRepository(context)
+    private val memberRepository = MemberRepository
     val uid: StateFlow<Int> = memberRepository.uid
 
     private val _email = MutableStateFlow("")
@@ -44,17 +45,17 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
     }
 
     fun onLoginClick(newUid: Int) {
-//        viewModelScope.launch {
-//            val member = login(_email.value, _password.value)
-//            if (member != null) {
-//                _isLoginSuccess.update { true }
+        viewModelScope.launch {
+            val member = login(_email.value, _password.value)
+            if (member != null) {
+                _isLoginSuccess.update { true }
                 memberRepository.saveUid(newUid) //儲存登入成功後的 Uid
 //                isButtonEnabled.value = true
 //                saveMemberInfoPref(member)
 //                MemberRepository()
-//            }
+            }
             // 儲存 User 資料 跳頁
-//        }
+        }
     }
 
     fun logout() {
@@ -80,6 +81,15 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
             return null
         }
     }
+}
 
-
+class MemberLoginViewModelFactory(private val context: Context) :
+    ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MemberLoginViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MemberLoginViewModel(context) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }
