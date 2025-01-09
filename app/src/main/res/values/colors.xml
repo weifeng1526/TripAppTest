@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <!--    不要用這裡的顏色，之後會刪掉。>-->
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFF</color>
+
+
+    <!--    新的顏色設定-->
+    <color name="green_100">#BBDDD1</color>
+    <color name="green_200">#608E7E</color>
+
+
+    <color name="red_100">#EE8F8D</color>
+    <color name="red_200">#F1686D</color>
+
+    <color name="yellow_100">#FFD8A1</color>
+    <color name="yellow_200">#FDC679</color>
+
+    <color name="purple_100">#9FA2E1</color>
+    <color name="purple_200">#8486CA</color>
+    <color name="purple_300">#6366C0</color>
+    <color name="purple_400">#4749A0</color>
+
+
+    <color name="white_100">#FFFFFF</color>
+    <color name="white_200">#F6F5FB</color>
+    <color name="white_300">#ECEAF5</color>
+    <color name="white_400">#DFDCEF</color>
+
+
+    <color name="black_100">#F1F0F0</color>
+    <color name="black_200">#EBEBED</color>
+    <color name="black_300">#E5E5E8</color>
+    <color name="black_400">#D3D3D9</color>
+    <color name="black_500">#C5C5CF</color>
+    <color name="black_600">#A9A9B6</color>
+    <color name="black_700">#9C9BA9</color>
+    <color name="black_800">#5D5C66</color>
+    <color name="black_900">#3C3B41</color>
+    <color name="black_1000">#1F1F23</color>
+
+
+</resources>
