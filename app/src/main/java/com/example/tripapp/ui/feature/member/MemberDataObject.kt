@@ -16,6 +16,7 @@ data class Member (
 )
 
 data class LoginRequest(
+    val memNo: Int,
     val memEmail: String,
     val memPw:String
 )

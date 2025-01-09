@@ -44,12 +44,13 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
         _password.update { password }
     }
 
-    fun onLoginClick(newUid: Int) {
+    fun onLoginClick() {
         viewModelScope.launch {
-            val member = login(_email.value, _password.value)
+            val member = login(uid.value,_email.value, _password.value)
             if (member != null) {
                 _isLoginSuccess.update { true }
-                memberRepository.saveUid(newUid) //儲存登入成功後的 Uid
+                memberRepository.saveUid(uid.value) //儲存登入成功後的 Uid
+                Log.d(tag, "member: ${uid.value}")
 //                isButtonEnabled.value = true
 //                saveMemberInfoPref(member)
 //                MemberRepository()
@@ -58,11 +59,11 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
         }
     }
 
-    fun logout() {
-        viewModelScope.launch {
-            memberRepository.clearUid() //清除 Uid
-        }
-    }
+//    fun logout() {
+//        viewModelScope.launch {
+//            memberRepository.clearUid() //清除 Uid
+//        }
+//    }
     fun showErrorMessage(message: String) {
         _errorMessage.value = message
     }
@@ -71,9 +72,9 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
         _errorMessage.value = null
     }
 
-    suspend fun login(memEmail: String, memPw: String): Member? {
+    suspend fun login(memNo:Int,memEmail: String, memPw: String): Member? {
         try {
-            val response = RetrofitInstance.api.login(LoginRequest(memEmail, memPw))
+            val response = RetrofitInstance.api.login(LoginRequest(memNo,memEmail, memPw))
             Log.d(tag, "response: ${response}")
             return response
         } catch (e: Exception) {

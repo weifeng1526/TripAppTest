@@ -233,7 +233,7 @@ fun MemberLoginScreen(
                     else -> {
                         viewModel.clearErrorMessage() //清空錯誤訊息
                         onPlanHomeClick()
-                        viewModel.onLoginClick(newUid = uid)
+                        viewModel.onLoginClick()
                     }
                 }
             },

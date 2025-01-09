@@ -40,8 +40,8 @@ object MemberRepository {
     }
 
     //清除Uid
-    fun clearUid() {
-        _memNo.update { 0 }
+    fun clearUid(newUid: Int) {
+        _memNo.update { newUid }
         sharedPreferences.edit().remove(KEY_UID).apply()
         Log.d(tag, "清除Uid")
     }
