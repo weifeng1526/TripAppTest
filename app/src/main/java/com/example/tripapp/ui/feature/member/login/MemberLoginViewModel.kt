@@ -48,9 +48,11 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
         viewModelScope.launch {
             val member = login(uid.value,_email.value, _password.value)
             if (member != null) {
+                Log.d(tag,"login${member}")
                 _isLoginSuccess.update { true }
-                memberRepository.saveUid(uid.value) //儲存登入成功後的 Uid
+                memberRepository.saveUid(member.memNo) //儲存登入成功後的 Uid
                 Log.d(tag, "member: ${uid.value}")
+
 //                isButtonEnabled.value = true
 //                saveMemberInfoPref(member)
 //                MemberRepository()
@@ -59,11 +61,11 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
         }
     }
 
-//    fun logout() {
-//        viewModelScope.launch {
-//            memberRepository.clearUid() //清除 Uid
-//        }
-//    }
+    fun Logout() {
+        viewModelScope.launch {
+            memberRepository.clearUid(0) //清除 Uid
+        }
+    }
     fun showErrorMessage(message: String) {
         _errorMessage.value = message
     }
@@ -82,7 +84,22 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
             return null
         }
     }
+
+    private val preferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    private val repository =MemberRepository
+
+    private fun saveMemberInfoPref(member:Member){
+        with(preferences.edit()){
+            putInt("uid",member.memNo)
+            putString("email",member.memEmail)
+            putString("name",member.memName)
+            putInt("sta",member.memSta)
+            putString("icon",member.memIcon)
+            apply()
+        }
+    }
 }
+
 
 class MemberLoginViewModelFactory(private val context: Context) :
     ViewModelProvider.Factory {

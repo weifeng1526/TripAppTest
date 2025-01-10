@@ -57,7 +57,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tripapp.R
-import com.example.tripapp.ui.feature.member.MemberRepository
 import com.example.tripapp.ui.feature.trip.plan.alter.PLAN_ALTER_ROUTE
 import com.example.tripapp.ui.feature.trip.plan.create.PLAN_CREATE_ROUTE
 import com.example.tripapp.ui.feature.trip.plan.crew.PLAN_CREW_ROUTE
@@ -108,9 +107,6 @@ fun PlanHomeScreen(
     var expandPlanConfigDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
-    val memberRepository = MemberRepository
-    val uid = memberRepository.getUid()
-
     LaunchedEffect(Unit) {
         val response = requestVM.GetPlans()
         Log.d("response getplans" , "$response")
@@ -149,7 +145,7 @@ fun PlanHomeScreen(
                 onExpandedChange = {  }
             ) {
                 TextField(
-                    value = "$uid",
+                    value = inputedContry,
                     readOnly = false,
                     maxLines = 1,
                     singleLine = true,

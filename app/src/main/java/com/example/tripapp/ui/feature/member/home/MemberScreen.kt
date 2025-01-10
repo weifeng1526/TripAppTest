@@ -37,6 +37,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.tripapp.R
 import com.example.tripapp.ui.feature.baggage.baglist.BAG_NAVIGATION_ROUTE
+import com.example.tripapp.ui.feature.member.CleanUid
+import com.example.tripapp.ui.feature.member.GetUid
+import com.example.tripapp.ui.feature.member.MemberRepository
 import com.example.tripapp.ui.feature.member.login.MEMBER_LOGIN_ROUTE
 import com.example.tripapp.ui.feature.member.turfav.TUR_FAV_ROUTE
 import com.example.tripapp.ui.theme.black100
@@ -53,7 +56,7 @@ fun MemberRoute(
     navController: NavHostController
 ) {
     MemberScreen(
-        onLoginClick =  { navController.navigate(MEMBER_LOGIN_ROUTE) },
+        onLoginClick = { navController.navigate(MEMBER_LOGIN_ROUTE) },
 //        onTurFavClick = { navController.navigate(TUR_FAV_ROUTE) },
         onBagClick = { navController.navigate(BAG_NAVIGATION_ROUTE) },
 
@@ -64,7 +67,7 @@ fun MemberRoute(
 @Composable
 fun PreviewMemberRoute() {
     MemberScreen(
-        viewModel= viewModel()
+        viewModel = viewModel()
     )
 }
 
@@ -75,6 +78,8 @@ fun MemberScreen(
 //    onTurFavClick: () -> Unit = { },
     onBagClick: () -> Unit = { },
 ) {
+    val uid = GetUid(MemberRepository)
+    val logout = CleanUid(MemberRepository)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -96,14 +101,34 @@ fun MemberScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.member_friends_baseline_group_24),
-                    contentDescription = "好友管理",
+                Text(
+                    textAlign = TextAlign.Justify,
+                    text = "登出",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier
-                        .clickable { }
-                        .padding(end = 15.dp)
-                        .size(40.dp)
+                        .clickable(
+                            onClick = {
+                                if (uid > 0) {
+                                    logout
+                                }
+
+                            }
+                        )
+                        .height(30.dp)
+                        .padding()
+                        .wrapContentSize(Alignment.Center)
                 )
+//                Text(
+//                    textAlign = TextAlign.Justify,
+//                    text = "登出",
+//                    fontSize = 20.dp,
+//                    fontWeight = FontWeight.Bold,
+//                    modifier = Modifier
+//                        .clickable { }
+//                        .padding(end = 15.dp)
+//                        .size(40.dp)
+//                )
             }
             Column(
                 modifier = Modifier
@@ -187,7 +212,7 @@ fun MemberScreen(
 fun HomeList(
 //    onTurFavClick: () -> Unit,
     onBagClick: () -> Unit,
-    ) {
+) {
     Column {
 //        Row(
 //            verticalAlignment = Alignment.CenterVertically,
