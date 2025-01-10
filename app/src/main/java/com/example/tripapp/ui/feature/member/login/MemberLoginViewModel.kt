@@ -63,7 +63,7 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
 
     fun Logout() {
         viewModelScope.launch {
-            memberRepository.clearUid(0) //清除 Uid
+            memberRepository.clearUid() //清除 Uid
         }
     }
     fun showErrorMessage(message: String) {

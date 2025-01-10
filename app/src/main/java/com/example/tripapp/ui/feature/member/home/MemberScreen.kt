@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,14 +34,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.tripapp.R
 import com.example.tripapp.ui.feature.baggage.baglist.BAG_NAVIGATION_ROUTE
 import com.example.tripapp.ui.feature.member.CleanUid
 import com.example.tripapp.ui.feature.member.GetUid
 import com.example.tripapp.ui.feature.member.MemberRepository
+import com.example.tripapp.ui.feature.member.MemberViewModelFactory
 import com.example.tripapp.ui.feature.member.login.MEMBER_LOGIN_ROUTE
+import com.example.tripapp.ui.feature.member.login.MemberLoginViewModel
 import com.example.tripapp.ui.feature.member.turfav.TUR_FAV_ROUTE
 import com.example.tripapp.ui.theme.black100
 import com.example.tripapp.ui.theme.black900
@@ -52,14 +58,15 @@ import com.example.tripapp.ui.theme.white400
 
 @Composable
 fun MemberRoute(
-    viewModel: MemberViewModel = viewModel(),
+    viewModel: MemberViewModel = viewModel(factory = MemberViewModelFactory(LocalContext.current)),
     navController: NavHostController
 ) {
     MemberScreen(
         onLoginClick = { navController.navigate(MEMBER_LOGIN_ROUTE) },
 //        onTurFavClick = { navController.navigate(TUR_FAV_ROUTE) },
         onBagClick = { navController.navigate(BAG_NAVIGATION_ROUTE) },
-
+        navController = navController, // 將 navController 傳遞給 MemberScreen
+        viewModel = viewModel
         )
 }
 
@@ -67,19 +74,25 @@ fun MemberRoute(
 @Composable
 fun PreviewMemberRoute() {
     MemberScreen(
-        viewModel = viewModel()
-    )
+        viewModel = viewModel(),
+        navController = rememberNavController()
+        )
 }
 
 @Composable
 fun MemberScreen(
-    viewModel: MemberViewModel = viewModel(),
+    navController: NavHostController,
+    viewModel: MemberViewModel =
+        viewModel(
+            factory = MemberViewModelFactory(
+                LocalContext.current
+            )
+        ),
     onLoginClick: () -> Unit = { },
 //    onTurFavClick: () -> Unit = { },
     onBagClick: () -> Unit = { },
 ) {
     val uid = GetUid(MemberRepository)
-    val logout = CleanUid(MemberRepository)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -109,10 +122,17 @@ fun MemberScreen(
                     modifier = Modifier
                         .clickable(
                             onClick = {
-                                if (uid > 0) {
-                                    logout
-                                }
+                                viewModel.signOut()
+                                navController.navigate("login") {
+                                    // 使用接收到的 navController 進行導航
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+//                                if (uid > 0) {
+//                                    logout
+//                                }
 
+                                }
                             }
                         )
                         .height(30.dp)

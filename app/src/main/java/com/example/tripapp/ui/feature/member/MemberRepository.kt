@@ -40,14 +40,15 @@ object MemberRepository {
     }
 
     //清除Uid
-    fun clearUid(newUid: Int) {
-        _memNo.update { newUid }
+    fun clearUid() {
+        _memNo.update { 0 }
         sharedPreferences.edit().remove(KEY_UID).apply()
         Log.d(tag, "清除Uid")
     }
 
     // 讀取當前的 UID（方便同步操作）
     fun getUid(): Int = _memNo.value
+
 }
 
 //class MemberRepository (context: Context) {
