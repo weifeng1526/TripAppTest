@@ -1,9 +1,8 @@
 package com.example.tripapp.ui.feature.member.signup
 
-import android.content.Context
 import android.util.Log
-import android.util.Patterns
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.tripapp.ui.feature.member.Member
 import com.example.tripapp.ui.feature.member.SignUpRequest
@@ -14,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class MemberSignUpViewModel(context: Context) : ViewModel() {
+class MemberSignUpViewModel() : ViewModel() {
     private val tag = "tag_SignUpVM"
 
     private val _uid = MutableStateFlow(0)
@@ -118,4 +117,14 @@ class MemberSignUpViewModel(context: Context) : ViewModel() {
 //        }
 //        isButtonEnabled.value = true
 //    }
+}
+
+class MemberSignUpViewModelFactory : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MemberSignUpViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MemberSignUpViewModel() as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }

@@ -41,8 +41,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.tripapp.R
 import com.example.tripapp.ui.feature.baggage.baglist.BAG_NAVIGATION_ROUTE
-import com.example.tripapp.ui.feature.member.CleanUid
+import com.example.tripapp.ui.feature.member.GetName
 import com.example.tripapp.ui.feature.member.GetUid
+import com.example.tripapp.ui.feature.member.IsLogin
 import com.example.tripapp.ui.feature.member.MemberRepository
 import com.example.tripapp.ui.feature.member.MemberViewModelFactory
 import com.example.tripapp.ui.feature.member.login.MEMBER_LOGIN_ROUTE
@@ -67,7 +68,7 @@ fun MemberRoute(
         onBagClick = { navController.navigate(BAG_NAVIGATION_ROUTE) },
         navController = navController, // 將 navController 傳遞給 MemberScreen
         viewModel = viewModel
-        )
+    )
 }
 
 @Preview
@@ -76,7 +77,7 @@ fun PreviewMemberRoute() {
     MemberScreen(
         viewModel = viewModel(),
         navController = rememberNavController()
-        )
+    )
 }
 
 @Composable
@@ -123,20 +124,14 @@ fun MemberScreen(
                         .clickable(
                             onClick = {
                                 viewModel.signOut()
-                                navController.navigate("login") {
-                                    // 使用接收到的 navController 進行導航
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
+                                navController.navigate(MEMBER_LOGIN_ROUTE)
 //                                if (uid > 0) {
 //                                    logout
 //                                }
-
-                                }
                             }
                         )
                         .height(30.dp)
-                        .padding()
+                        .padding(end = 18.dp)
                         .wrapContentSize(Alignment.Center)
                 )
 //                Text(
@@ -176,13 +171,21 @@ fun MemberScreen(
                             .size(60.dp)
                             .clip(CircleShape)
                     )
+                    val isLogin = IsLogin()
+                    val name = GetName()
+                    val memberName = if (isLogin) name else "會員登入"
                     Text(
                         textAlign = TextAlign.Justify,
-                        text = "會員登入",
+                        text = memberName,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .clickable(onClick = onLoginClick)
+                            .clickable(onClick = {
+                                if (isLogin) {
+                                    onLoginClick.invoke()
+                                } else {
+                                }
+                            })
                             .height(30.dp)
                             .padding()
                             .wrapContentSize(Alignment.Center)

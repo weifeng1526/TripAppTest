@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,6 +29,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,12 +53,16 @@ import com.example.tripapp.ui.feature.baggage.baglist.bagListScreenRoute
 import com.example.tripapp.ui.feature.baggage.itemlist.addItemScreenRoute
 import com.example.tripapp.ui.feature.map.mapRoute
 import com.example.tripapp.ui.feature.member.GetUid
+import com.example.tripapp.ui.feature.member.IsLogin
 import com.example.tripapp.ui.feature.member.MemberRepository
 import com.example.tripapp.ui.feature.member.home.MEMBER_ROUTE
 import com.example.tripapp.ui.feature.member.home.memberRoute
 import com.example.tripapp.ui.feature.member.home.tabs.notifyRoute
 import com.example.tripapp.ui.feature.member.login.MEMBER_LOGIN_ROUTE
+import com.example.tripapp.ui.feature.member.login.MemberLoginScreen
 import com.example.tripapp.ui.feature.member.login.memberLoginRoute
+import com.example.tripapp.ui.feature.member.signup.MEMBER_SIGNUP_ROUTE
+import com.example.tripapp.ui.feature.member.signup.MemberSignUpScreen
 import com.example.tripapp.ui.feature.member.signup.memberSignUpRoute
 import com.example.tripapp.ui.feature.member.turfav.turFavRoute
 import com.example.tripapp.ui.feature.shop.SHOP_ROUTE
@@ -142,101 +149,127 @@ fun tripApp(
             tabsBottom.entries.associateBy { it.index }
         )
     }
+    val scaffoldState = rememberScaffoldState()
+    val context = LocalContext.current
+    val uid = MemberRepository.getUid()
+    val isLoggedIn = uid != 0 // 判斷是否已登入
+    val isLogin = IsLogin()
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+    val isShowTopBottomBar =
+        if (currentRoute == MEMBER_LOGIN_ROUTE || currentRoute == MEMBER_SIGNUP_ROUTE) {
+            true
+        } else {
+            false
+        } // 若為登入、註冊頁面，不顯示TopBar跟BottomBar
 
+    LaunchedEffect(uid) {
+        if (isLoggedIn) {
+            navController.navigate(PLAN_HOME_ROUTE) // 已登入，導航到首頁
+        } else {
+            navController.navigate(MEMBER_LOGIN_ROUTE) // 未登入，導航到登入頁面
+        }
+    }
 
+    if (currentRouteIsLoginOrSignup(navController)) {
+        LoginAndSignupContent(navController) // 呼叫 LoginAndSignupContent
+    } else {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
 
-
-
-    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
-        CenterAlignedTopAppBar(
-            modifier = Modifier.fillMaxWidth(),
-            //
-            title = {
-                tabsBottomList.value.forEach() { (index, tab) ->
-                    if (index == tabsBottomListBtnIndex) {
-                        Text(
-                            text = tab.title,
-                            fontSize = 19.sp
-                        )
-                    }
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = purple200, titleContentColor = white200
-            ),
-            navigationIcon = {
-                Image(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "back",
-                    modifier = Modifier
-                        .padding(24.dp, 0.dp, 0.dp, 0.dp)
-                        .size(32.dp)
-                        .clickable { navController.popBackStack() }
-                )
-            },
-
-            )
-    }, bottomBar = {
-        BottomAppBar(
-            contentColor = white200,
-
-            ) {
-
-
-            TabRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(white100),
-                selectedTabIndex = tabsBottomListBtnIndex,
-                containerColor = white300,
-                contentColor = purple300,
-                indicator = {},
-                divider = {}
-            ) {
-
-                tabsBottomList.value.forEach() { (index, tab) ->
-                    Tab(
-                        modifier = Modifier
-                            .background(
-                                if (index == tabsBottomListBtnIndex) white100 else white300
-                            ),
-
-                        icon = {
+            topBar = {
+                if (!isLogin) {
+                    isShowTopBottomBar
+                } else {
+                    CenterAlignedTopAppBar(
+                        modifier = Modifier.fillMaxWidth(),
+                        //
+                        title = {
+                            tabsBottomList.value.forEach() { (index, tab) ->
+                                if (index == tabsBottomListBtnIndex) {
+                                    Text(
+                                        text = tab.title,
+                                        fontSize = 19.sp
+                                    )
+                                }
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = purple200, titleContentColor = white200
+                        ),
+                        navigationIcon = {
+                            //隱藏左上角的回前一頁箭頭
+//                        val currentRoute = navController.currentBackStackEntry?.destination?.route
+//                        if (
+//                            currentRoute != null &&
+//                            !tabsBottom.values().map { it.route }.contains(currentRoute)
+//                            ) {
                             Image(
-                                painter = painterResource(tab.img),
-                                contentDescription = tab.title
+                                painter = painterResource(R.drawable.ic_back),
+                                contentDescription = "back",
+                                modifier = Modifier
+                                    .padding(24.dp, 0.dp, 0.dp, 0.dp)
+                                    .size(32.dp)
+                                    .clickable { navController.popBackStack() }
                             )
-                        },
-                        text = {
-                            Text(
-                                text = tab.title,
-                                fontSize = 12.sp,
-                            )
-                        },
-                        selected = index == tabsBottomListBtnIndex,
-                        onClick = {
-                            tabsBottomListBtnIndex = index
-                            navController.navigate(tab.route)
+//                        }
                         },
                     )
                 }
 
-
+            },
+            bottomBar = {
+                // if isLogin 顯示BottomAppBar
+                if (!isLogin) {
+                    isShowTopBottomBar
+                } else {
+                    BottomAppBar(
+                        contentColor = white200,
+                    ) {
+                        TabRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(white100),
+                            selectedTabIndex = tabsBottomListBtnIndex,
+                            containerColor = white300,
+                            contentColor = purple300,
+                            indicator = {},
+                            divider = {}
+                        ) {
+                            tabsBottomList.value.forEach() { (index, tab) ->
+                                Tab(
+                                    modifier = Modifier
+                                        .background(
+                                            if (index == tabsBottomListBtnIndex) white100 else white300
+                                        ),
+                                    icon = {
+                                        Image(
+                                            painter = painterResource(tab.img),
+                                            contentDescription = tab.title
+                                        )
+                                    },
+                                    text = {
+                                        Text(
+                                            text = tab.title,
+                                            fontSize = 12.sp,
+                                        )
+                                    },
+                                    selected = index == tabsBottomListBtnIndex,
+                                    onClick = {
+                                        tabsBottomListBtnIndex = index
+                                        navController.navigate(tab.route)
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
             }
-
-
-        }
-
-    }
-
-
-    ) { innerPadding ->
-
-
-        Column(
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            TripNavHost(navController)
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                TripNavHost(navController)
+            }
         }
     }
 }
@@ -247,11 +280,10 @@ fun TripNavHost(
     navController: NavHostController,
 
     ) {
-    var loginNew = GetUid(MemberRepository)
     NavHost(
         modifier = Modifier, navController = navController,
         // 初始頁面
-        startDestination = MEMBER_LOGIN_ROUTE
+        startDestination = PLAN_HOME_ROUTE
 //        {
 //            if (loginNew < 0) {
 //                MEMBER_LOGIN_ROUTE
@@ -269,6 +301,7 @@ fun TripNavHost(
 
         // 畫面路徑-Ashley
         bagListScreenRoute(navController = navController)
+//        bagListScreenRouteSelected(navController = navController)
         addItemScreenRoute(navController = navController)
 
         //畫面路徑-leo
@@ -300,6 +333,25 @@ fun TripNavHost(
     }
 }
 
+// 判斷目前的路由是否為 Login 或 Signup
+fun currentRouteIsLoginOrSignup(navController: NavHostController): Boolean {
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+    return currentRoute == MEMBER_LOGIN_ROUTE || currentRoute == MEMBER_SIGNUP_ROUTE // 根據您的 SignUp 路由名稱調整
+}
+
+@Composable
+fun LoginAndSignupContent(navController: NavHostController) {
+    // 根據目前的路由顯示不同的內容
+    when (navController.currentBackStackEntry?.destination?.route) {
+        MEMBER_LOGIN_ROUTE -> {
+            MemberLoginScreen() // 顯示 LoginScreen
+        }
+
+        MEMBER_SIGNUP_ROUTE -> {
+            MemberSignUpScreen() // 顯示 SignUpScreen
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
