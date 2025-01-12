@@ -94,6 +94,10 @@ fun MemberScreen(
     onBagClick: () -> Unit = { },
 ) {
     val uid = GetUid(MemberRepository)
+    val isLogin = IsLogin()
+    val name = GetName()
+    val memberName = if (isLogin) name else "會員登入"
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -123,8 +127,9 @@ fun MemberScreen(
                     modifier = Modifier
                         .clickable(
                             onClick = {
-                                viewModel.signOut()
-                                navController.navigate(MEMBER_LOGIN_ROUTE)
+                                MemberRepository.clearUid()
+//                                MemberRepository.cleanName("")
+//                                navController.navigate(MEMBER_LOGIN_ROUTE)
 //                                if (uid > 0) {
 //                                    logout
 //                                }
@@ -171,21 +176,20 @@ fun MemberScreen(
                             .size(60.dp)
                             .clip(CircleShape)
                     )
-                    val isLogin = IsLogin()
-                    val name = GetName()
-                    val memberName = if (isLogin) name else "會員登入"
                     Text(
                         textAlign = TextAlign.Justify,
                         text = memberName,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .clickable(onClick = {
-                                if (isLogin) {
-                                    onLoginClick.invoke()
-                                } else {
+                            .clickable(
+                                onClick = {
+                                    if (isLogin) {
+                                        onLoginClick.invoke()
+                                    } else {
+                                    }
                                 }
-                            })
+                            )
                             .height(30.dp)
                             .padding()
                             .wrapContentSize(Alignment.Center)

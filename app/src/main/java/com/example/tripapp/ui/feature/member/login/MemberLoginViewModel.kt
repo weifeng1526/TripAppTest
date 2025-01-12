@@ -51,6 +51,7 @@ class MemberLoginViewModel(context: Context) : ViewModel() {
                 Log.d(tag,"login${member}")
                 _isLoginSuccess.update { true }
                 memberRepository.saveUid(member.memNo) //儲存登入成功後的 Uid
+                memberRepository.getName(member.memName) //儲存登入成功後的 Name
                 Log.d(tag, "member: ${uid.value}")
 
 //                isButtonEnabled.value = true
