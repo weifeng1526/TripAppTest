@@ -31,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -43,11 +44,17 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.tripapp.R
 import com.example.tripapp.ui.feature.baggage.baglist.BAG_NAVIGATION_ROUTE
+import com.example.tripapp.ui.feature.member.GetUid
+import com.example.tripapp.ui.feature.member.MemberRepository
+import com.example.tripapp.ui.feature.member.login.MemberLoginViewModel
 import com.example.tripapp.ui.feature.trip.notes.show.SHOW_SCH_ROUTE
 import com.example.tripapp.ui.feature.trip.dataObjects.Plan
 import com.example.tripapp.ui.feature.trip.plan.home.PlanHomeViewModel
 import com.example.tripapp.ui.restful.RequestVM
+import com.example.tripapp.ui.theme.purple100
 import com.example.tripapp.ui.theme.purple300
+import com.example.tripapp.ui.theme.white100
+import com.example.tripapp.ui.theme.white400
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.log
@@ -64,20 +71,25 @@ fun SelectScreenRoute(navController: NavController){
 fun SelectSchScreen(
     navController: NavController,
     planHomeViewModel: PlanHomeViewModel = viewModel(),
-    requestVM: RequestVM = viewModel()
+    requestVM: RequestVM = viewModel(),
 ) {
+
+
     val plans by planHomeViewModel.plansState.collectAsState()
+    val uid = GetUid(MemberRepository)
+
     Log.d("SelectSchScreen", "Plan $plans")
-    LaunchedEffect(Unit) {
+    LaunchedEffect(uid) {
         val  planResponse = requestVM.GetPlans()
         Log.d("planResponse", "Plan $planResponse")
         planHomeViewModel.setPlans(planResponse)
-    }
 
+    }
+    val userPlans = plans.filter { it.memNo == uid }
     val today = LocalDate.now()
 
     // 找出即將出發的行程
-    val recentPlan = plans
+    val recentPlan = userPlans
         .mapNotNull { plan ->
             try {
                 val startDate = LocalDate.parse(plan.schEnd, DateTimeFormatter.ISO_DATE)
@@ -91,7 +103,7 @@ fun SelectSchScreen(
         .firstOrNull()?.first
 
     // 所有已發生的行程（包括過去與未來）
-    val allPlans = plans
+    val allPlans = userPlans
 
     Column(
         modifier = Modifier
@@ -188,18 +200,19 @@ fun RecentPlanCard(
                 )
             }
             FloatingActionButton(
-                onClick = { navController.navigate(BAG_NAVIGATION_ROUTE) },
+                onClick = { navController.navigate("${BAG_NAVIGATION_ROUTE}/${plan.schNo}") },
                 shape = RoundedCornerShape(64.dp),
                 modifier = Modifier
                     .size(50.dp)
                     .offset(-10.dp),
-                containerColor = purple300
+                containerColor = purple100
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.myicon_suitcase_1),
+                    painter = painterResource(id = R.drawable.ashley___suitcase_1_new),
                     contentDescription = "image description",
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    colorFilter = ColorFilter.tint(colorResource(id = R.color.purple_300))
                 )
             }
         }
@@ -256,18 +269,19 @@ fun SelectSchCard(
                 )
             }
             FloatingActionButton(
-                onClick = { navController.navigate(BAG_NAVIGATION_ROUTE) },
+                onClick = { navController.navigate("${BAG_NAVIGATION_ROUTE}/${plan.schNo}") },
                 shape = RoundedCornerShape(64.dp),
                 modifier = Modifier
                     .size(50.dp)
                     .offset(-10.dp),
-                containerColor = purple300
+                containerColor = purple100
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.myicon_suitcase_1),
+                    painter = painterResource(id = R.drawable.ashley___suitcase_1_new),
                     contentDescription = "image description",
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    colorFilter = ColorFilter.tint(colorResource(id = R.color.purple_300))
                 )
             }
         }

@@ -3,6 +3,7 @@
     <string name="product_list">旅遊商城</string>
     <string name="product_detail">Detail</string>
     <string name="order">Order</string>
+    <string name="order_list">OrderList</string>
     <string name="back_button">Back</string>
     <string name="product_name">Product name</string>
     <string name="button_buy">立即購買</string>
@@ -12,8 +13,8 @@
     <string name="spending">帳務管理</string>
     <string name="notes">目前行程</string>
     <string name="member">會員中心</string>
-    <string name="productNum_format">ProductNumber: %s</string>
-    <string name="productname_format">Product name: %s</string>
-    <string name="price_format">Price: %f</string>
-    <string name="longDescription_format">Detail: %s</string>
+    <string name="productNum_format">商品編號 : %s</string>
+    <string name="productname_format">商品名稱 : %s</string>
+    <string name="price_format">商品價格 : %d</string>
+    <string name="longDescription_format">商品介紹 : %s</string>
 </resources>

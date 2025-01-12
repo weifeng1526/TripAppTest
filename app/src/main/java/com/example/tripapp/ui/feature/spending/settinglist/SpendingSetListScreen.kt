@@ -21,11 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.tripapp.R
-import com.example.tripapp.ui.feature.spending.addlist.SPENDING_ADD_ROUTE
 import com.example.tripapp.ui.feature.spending.deposit.SPENDING_DEPOSIT_ROUTE
-import com.example.tripapp.ui.feature.spending.setting.SPENDING_SET_ROUTE
 import com.example.tripapp.ui.theme.black700
-import com.example.tripapp.ui.theme.purple300
 import com.example.tripapp.ui.theme.white400
 
 

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.update
 import com.example.tripapp.ui.feature.trip.dataObjects.Plan
 import kotlinx.coroutines.launch
 import com.example.tripapp.ui.restful.RequestVM
+import okhttp3.MultipartBody
 
 class PlanHomeViewModel : ViewModel() {
     val requestVM = RequestVM()
@@ -39,28 +40,6 @@ class PlanHomeViewModel : ViewModel() {
 
     private var _memberNumber = MutableStateFlow(Int)
     val memberNumberState = _memberNumber.asStateFlow()
-
-//    init {
-//        viewModelScope.launch {
-//            val response = requestVM.GetPlans()
-//            response.let {
-//                _plansState.update {
-//                    response
-//                }
-//                setContryNamesFromPlans(response)
-//            }
-//        }
-//        viewModelScope.launch {
-//            /** id寫死的要注意 **/
-//            val response = requestVM.GetPlanByMemId(2)
-//            response.let {
-//                _plansByMemberState.update {
-//                    response
-//                }
-//            }
-//        }
-//    }
-
 
     fun setPlanByApi(id: Int) {
         viewModelScope.launch {
@@ -170,6 +149,12 @@ class PlanHomeViewModel : ViewModel() {
     fun setSearchWord(word: String) {
         _searchWord.update { word }
         Log.d("searchWord", "${word}")
+    }
+
+    fun updatePlanImage(image: MultipartBody.Part?) {
+        viewModelScope.launch {
+            requestVM.UpdatePostWithImage(image)
+        }
     }
 }
 

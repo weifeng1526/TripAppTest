@@ -1,3 +1,104 @@
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.tripapp.ui.feature.spending.CrewRecord
+import com.example.tripapp.ui.feature.spending.SpendingRecord
+import com.example.tripapp.ui.feature.trip.dataObjects.Plan
+import com.ron.restdemo.RetrofitInstance
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+class SpendingListViewModel:ViewModel(){
+    // 2 定義屬性
+    // 找到一筆資料
+    private var _spendingOneListInfo =
+        MutableStateFlow<SpendingRecord?>(SpendingRecord())
+    val spendingOneListInfo = _spendingOneListInfo.asStateFlow()
+
+    // 找到行程編號跟名字
+    private val _tripName = MutableStateFlow<List<CrewRecord>?>(listOf())
+    val tripName = _tripName.asStateFlow()
+
+
+//    init {
+//        viewModelScope.launch {
+//            _tripName.update { findTripName() }
+//        }
+//    }
+
+
+    //3 取得資料
+    fun GetData(costNo: Int) {
+        viewModelScope.launch {
+            _spendingOneListInfo.update { getOne(costNo) }
+        }
+    }
+
+
+    fun getTripName(memNo:Int){
+        viewModelScope.launch {
+            _tripName.update { findTripName(memNo) }
+        }
+
+    }
+
+
+/** 取得一筆Plan */
+//suspend fun getOne(costNo: Int): List<SpendingRecord>? {
+//    val tag = "tag_OneSpendingListViewModel"
+//    try {
+//        val response = RetrofitInstance.api.getOneSpendingList(costNo)
+//        Log.d(tag, "data: ${response}")
+//        return response
+//    } catch (e: Exception) {
+//        Log.e(tag, "error: ${e.message}")
+//        return null
+//    }
+//}
+
+
+//取得單筆消費明細
+suspend fun getOne(costNo: Int): SpendingRecord? {
+    try {
+        val response = RetrofitInstance.api.getOneSpendingList(costNo)
+        Log.d("tagaaa", "data: ${response}")
+        return response
+    } catch (e: Exception) {
+        Log.e("tagaaa", "error: ${e.message}")
+        return null
+    }
+}
+
+
+    suspend fun GetPlan(memNo: Int): SpendingRecord? {
+        try {
+            val response = RetrofitInstance.api.getOneSpendingList(memNo)
+            Log.d("tagaaa", "data: ${response}")
+            return response
+        } catch (e: Exception) {
+            Log.e("tagaaa", "error: ${e.message}")
+            return null
+        }
+    }
+
+suspend fun findTripName(memNo:Int):List<CrewRecord>? {
+    try {
+        Log.d("TAGCCC", "有沒有進來")
+        val response = RetrofitInstance.api.findTripName(memNo)
+        Log.d("TAGCCC", "findTripName:$response ")
+        return response
+    }catch (e: Exception){
+        Log.d("TAGCCC", "Exception:$e ")
+        return null
+    }
+}
+
+
+}
+
+
 //package com.example.tripapp.ui.feature.spending.list
 //
 //import androidx.lifecycle.ViewModel

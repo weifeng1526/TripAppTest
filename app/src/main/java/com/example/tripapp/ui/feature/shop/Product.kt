@@ -6,7 +6,7 @@ data class Product(
     var prodNo: Int = 0,
     var prodName: String = "",
     var prodDesc: String = "",
-    var prodPrice: Double = 0.0,
+    var prodPrice: Int = 0,
     var prodSta: Boolean = false,
 //    var prodPic: ByteArray = byteArrayOf()
 //    var prodPic: Int = R.drawable.ic_launcher_foreground,

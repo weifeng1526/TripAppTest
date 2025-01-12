@@ -3,6 +3,7 @@ package com.example.tripapp.ui.feature.spending
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tripapp.ui.feature.trip.dataObjects.Destination
 import com.example.tripapp.ui.feature.trip.dataObjects.Plan
 import com.ron.restdemo.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,8 +12,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SpendingRecordVM : ViewModel() {
-    //
-    private val tag = SpendingRecordVM::class.java.simpleName
+    val TAG = "TAG---SpendingRecordVM---"
+    private val
+            tag = SpendingRecordVM::class.java.simpleName
 
     //初始化 listof() 空的list:
     private val _plan = MutableStateFlow<List<Plan>>(listOf())
@@ -34,6 +36,7 @@ class SpendingRecordVM : ViewModel() {
     private var _tabsTripListSelectedList = MutableStateFlow<Pair<Int, List<SpendingRecord>>?>(null)
     val tabTripListSelectedList = _tabsTripListSelectedList.asStateFlow()
 
+
 //    變數VM寫法
 //    private val _title = MutableStateFlow<String?>(null)
 //    val title = _title.asStateFlow()
@@ -46,10 +49,11 @@ class SpendingRecordVM : ViewModel() {
 
     init {
         viewModelScope.launch {
-            val spending = getSpendingList()
+            val spending = getSpendingList(1)
+            Log.d(TAG, "spendingAAAAA" + spending)
             // 用 schNo 分類，變成是 Pair<SchNo,消費明細>，才能區別每個 Tab 代表的 schNo
             val topicSpending = spending.groupBy { it.schNo }.toList()
-            Log.d("topicSpending", "size" + topicSpending.size)
+            Log.d(TAG, "topicSpendingSize" + topicSpending.size)
             _spendingListInfo.value = topicSpending
             // 分類完之後，將第一個列表當作預設顯示的資料
             _tabsTripListSelectedList.update { topicSpending.firstOrNull() }
@@ -78,11 +82,9 @@ class SpendingRecordVM : ViewModel() {
         }
     }
 
-
-    suspend fun getSpendingList(): List<SpendingRecord> {
-
-        try {
-            val response = RetrofitInstance.api.getSpendingList()
+    /** 取得所有資料 */
+    suspend fun getSpendingList(memNo:Int): List<SpendingRecord> {try {
+            val response = RetrofitInstance.api.getSpendingList(memNo)
             Log.d(tag, "getSpendingList data: ${response}")
             return response
         } catch (e: Exception) {
@@ -91,10 +93,40 @@ class SpendingRecordVM : ViewModel() {
         }
     }
 
+//    /** 取得某筆資料 */
+//    suspend fun getOneSpendingList(costNo: Int):List<SpendingRecord>{
+//        try {
+//            val response = RetrofitInstance.api.getOneSpendingList(costNo)
+//            Log.d(tag, "data: ${response}")
+//            return response
+//        }catch (e: Exception){
+//            Log.e(tag, "error: ${e.message}")
+//            return  listOf()
+//        }
+//    }
+
+
+  /** 新增一筆資料 */
+//    suspend fun addSpendingList(costNo: Int):List<SpendingRecord>{
+//        try {
+//            val response = RetrofitInstance.api.getOneSpendingList(costNo)
+//            Log.d(tag, "data: ${response}")
+//            return response
+//        }catch (e: Exception){
+//            Log.e(tag, "error: ${e.message}")
+//            return  listOf()
+//        }
+//    }
+
+
+
+
+
     // 點 tab 的反應，才能知道是哪個 Tab 亮起，跟要換哪個行程跟消費明細
     fun onTabChanged(changeIndex: Int) {
         _tabsTripListSelectedIndex.update { changeIndex }
-        val selectedSchNo = _spendingListInfo.value.getOrNull(changeIndex)
+        val selectedSchNo = spendingListInfo.value.getOrNull(changeIndex)
+      Log.d(TAG, "spendingListInfo: $spendingListInfo")
         _tabsTripListSelectedList.update { selectedSchNo }
     }
 

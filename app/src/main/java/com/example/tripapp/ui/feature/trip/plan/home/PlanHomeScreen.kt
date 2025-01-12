@@ -1,12 +1,15 @@
 package com.example.swithscreen
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,10 +23,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MenuAnchorType
@@ -52,6 +59,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -65,7 +73,18 @@ import com.example.tripapp.ui.feature.trip.plan.edit.PLAN_EDIT_ROUTE
 import com.example.tripapp.ui.feature.trip.plan.home.PlanHomeViewModel
 //import com.example.tripapp.ui.feature.trip.plan.restful.CreatePlan
 import com.example.tripapp.ui.feature.trip.dataObjects.Plan
+import com.example.tripapp.ui.feature.trip.plan.home.PLAN_HOME_ROUTE
 import com.example.tripapp.ui.restful.RequestVM
+import com.example.tripapp.ui.theme.black100
+import com.example.tripapp.ui.theme.black200
+import com.example.tripapp.ui.theme.black300
+import com.example.tripapp.ui.theme.black400
+import com.example.tripapp.ui.theme.black600
+import com.example.tripapp.ui.theme.black700
+import com.example.tripapp.ui.theme.black900
+import com.example.tripapp.ui.theme.green100
+import com.example.tripapp.ui.theme.purple100
+import com.example.tripapp.ui.theme.purple200
 import com.example.tripapp.ui.theme.white100
 import com.example.tripapp.ui.theme.white400
 import kotlinx.coroutines.CoroutineScope
@@ -96,11 +115,7 @@ fun PlanHomeScreen(
     }
     var expandContries by remember { mutableStateOf(false) }
     expandContries = expandContries && filteredContries.isNotEmpty()
-    //我創的行程表
-    var myCreatedPlans by remember { mutableStateOf(listOf<Plan>()) }
-    //我加入的群組
-    var myJoinedPlans by remember { mutableStateOf(listOf<Plan>()) }
-    //選擇的文字
+    //選擇的標籤
     var titleName = listOf("已創建的行程", "已加入的行程")
     var selectedTitle by remember { mutableStateOf(titleName[0]) }
     //其他
@@ -109,13 +124,13 @@ fun PlanHomeScreen(
 
     LaunchedEffect(Unit) {
         val response = requestVM.GetPlans()
-        Log.d("response getplans" , "$response")
+        Log.d("response getplans", "$response")
         response.let {
             planHomeViewModel.setPlans(response)
             planHomeViewModel.setContryNamesFromPlans(response)
         }
     }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(selectedTitle) {
         val response = requestVM.GetPlanByMemId(1)
         Log.d("getPlanByMemId", "${response}")
         response.let {
@@ -131,117 +146,94 @@ fun PlanHomeScreen(
     Log.d("init contryNames", "${contryNames}")
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(white100)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp)
                 .background(brush = Brush.verticalGradient(colors = listOf(white100, white400))),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            ExposedDropdownMenuBox(
-                expanded = false,
-                onExpandedChange = {  }
+            Button(
+                onClick = { navController.navigate(PLAN_CREATE_ROUTE) },
+                modifier = Modifier
+                    .fillMaxWidth() // 按鈕寬度佔滿全螢幕
+                    .padding(horizontal = 16.dp) // 可選：設定水平間距
+                    .height(56.dp), // 可選：設定固定高度
+                shape = RoundedCornerShape(24.dp), // 設定圓角
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(id = R.color.white_100), // 設定背景顏色
+                    contentColor = Color.Black, // 設定文字顏色
+                    disabledContainerColor = colorResource(id = R.color.white_300), // 禁用狀態背景顏色
+                    disabledContentColor = Color.LightGray // 禁用狀態文字顏色
+                ),
+                border = BorderStroke(4.dp, black300) // 設定邊框
             ) {
-                TextField(
-                    value = inputedContry,
-                    readOnly = false,
-                    maxLines = 1,
-                    singleLine = true,
-                    onValueChange = {
-                        expandContries = true
-                        inputedContry = it
-                    },
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.add_box),
-                            contentDescription = "",
-                            modifier = Modifier.size(30.dp)
-                                .clickable { navController.navigate(PLAN_CREATE_ROUTE) },
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(
-                            MenuAnchorType.PrimaryEditable,
-                            true
-                        ),
-                )
-                ExposedDropdownMenu(
-                    expanded = expandContries,
-                    onDismissRequest = { expandContries = false }
-                ) {
-                    filteredContries.forEach {
-                        DropdownMenuItem(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = { Text(it) },
-                            onClick = {
-                                selectedContry = it
-                                planHomeViewModel.setSearchWord(selectedContry)
-                                expandContries = false
-                                expandPlans = true
-                            }
-                        )
-                    }
-                }
+                Text(text = "新增行程表", fontSize = 18.sp) // 按鈕文字與樣式
             }
         }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(45.dp)
-                .background(Color.LightGray),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp)) // 裁剪為圓角
+                    .border(4.dp, black300, shape = RoundedCornerShape(24.dp)) // 使用相同的圓角形狀
                     .weight(1f)
-                    .fillMaxHeight()
                     .background(
-                        color = if (selectedTitle.equals(titleName[0])) colorResource(id = R.color.white_300)
-                        else colorResource(id = R.color.white_100)
+                        color = if (selectedTitle.equals(titleName[0])) colorResource(id = R.color.white_100)
+                        else colorResource(id = R.color.white_300),
+                        shape = RoundedCornerShape(24.dp)
                     )
                     .clickable { selectedTitle = titleName[0] },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "${myCreatedPlans.size}\r\n${titleName[0]}",
+                    text = "${titleName[0]}",
                     style = TextStyle(
-                        fontSize = 16.sp,
+                        fontSize = 20.sp,
                         textAlign = TextAlign.Center
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 )
             }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp)) // 裁剪為圓角
+                    .border(4.dp, black300, shape = RoundedCornerShape(24.dp)) // 使用相同的圓角形狀
                     .weight(1f)
-                    .fillMaxHeight()
                     .background(
-                        color = if (selectedTitle.equals(titleName[1])) colorResource(id = R.color.white_300)
-                        else colorResource(id = R.color.white_100)
+                        color = if (selectedTitle.equals(titleName[1])) colorResource(id = R.color.white_100)
+                        else colorResource(id = R.color.white_300),
+                        shape = RoundedCornerShape(24.dp)
                     )
                     .clickable { selectedTitle = titleName[1] },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "${myJoinedPlans.size}\r\n${titleName[1]}",
+                    text = "${titleName[1]}",
                     style = TextStyle(
-                        fontSize = 16.sp,
+                        fontSize = 20.sp,
                         textAlign = TextAlign.Center
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 )
             }
         }
+
         if (selectedTitle.equals(titleName[0]) && plansOfMember.size > 0) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(1), // 每列 1 個小卡
@@ -254,35 +246,41 @@ fun PlanHomeScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .height(320.dp)
-                            .background(Color.LightGray)
-                            .clickable {
-                                navController.navigate("${PLAN_EDIT_ROUTE}/${plan.schNo}")
-                            }
+                            .padding(10.dp)
+                            .height(300.dp)
+                            .border(1.dp, black900, shape = RoundedCornerShape(8.dp)),
+                        shape = RoundedCornerShape(8.dp), // 設定圓角
+                        colors = CardDefaults.cardColors(
+                            containerColor = purple200, // 背景顏色
+                            contentColor = purple200    // 內容顏色（可選）
+                        )
                     ) {
                         Image(
-                            painter = painterResource(R.drawable.dst),//預設圖
+                            painter = painterResource(R.drawable.aaa),//預設圖
                             contentDescription = "",
                             contentScale = ContentScale.FillBounds,
                             modifier = Modifier
-                                .padding(8.dp)
-                                .clip(RoundedCornerShape(8.dp))
+                                .padding(start = 6.dp, end = 6.dp, top = 6.dp)
                                 .fillMaxWidth()
                                 .height(200.dp)
+                                .clickable {
+                                    navController.navigate("${PLAN_EDIT_ROUTE}/${plan.schNo}")
+                                }
                         )
                         Row(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(bottom = 8.dp, start = 8.dp, end = 8.dp)
+                                .padding(bottom = 6.dp, start = 6.dp, end = 6.dp)
+                                .background(white100)
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.Start,
                                 verticalArrangement = Arrangement.Center,
                                 modifier = Modifier
-                                    .fillMaxWidth(0.7f)
+                                    .fillMaxWidth(0.8f)
                                     .fillMaxHeight()
                                     .padding()
+                                    .clip(RoundedCornerShape(8.dp)) // 裁剪為圓角
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -291,10 +289,12 @@ fun PlanHomeScreen(
                                         .fillMaxHeight(0.6f)
                                 ) {
                                     Text(
-                                        text = plan.schName, //行程名稱
-                                        maxLines = 2,
+                                        text = "${plan.schName}", //開始日期~結束日期
+                                        maxLines = 1,
                                         fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold,
                                         textAlign = TextAlign.Center,
+                                        color = black900,
                                         modifier = Modifier.padding(start = 16.dp)
                                     )
                                 }
@@ -308,7 +308,8 @@ fun PlanHomeScreen(
                                         text = "${plan.schStart} ~ ${plan.schEnd}", //開始日期~結束日期
                                         maxLines = 1,
                                         fontSize = 16.sp,
-                                        modifier = Modifier.padding(start = 16.dp)
+                                        color = black900,
+                                        modifier = Modifier.padding(start = 18.dp)
                                     )
                                 }
                             }
@@ -316,25 +317,31 @@ fun PlanHomeScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .fillMaxHeight()
+                                    .padding(5.dp),
+                                verticalArrangement = Arrangement.spacedBy(5.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Row(
                                     horizontalArrangement = Arrangement.End,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .fillMaxHeight(0.5f)
+                                        .padding(end = 6.dp)
                                 ) {
                                     IconButton(
                                         onClick = {
                                             expandPlanConfigDialog = true
                                             selectedPlanId = plan.schNo
-                                            Log.d("d expand", "expand: ${expandPlanConfigDialog}")
                                         },
-                                        modifier = Modifier.size(50.dp)
+                                        modifier = Modifier.size(40.dp)
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.more_horiz),
                                             contentDescription = "more Icon",
-                                            modifier = Modifier.size(48.dp),
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .background(white400)
+                                                .padding(5.dp),
                                             tint = Color.Unspecified
                                         )
                                     }
@@ -344,17 +351,20 @@ fun PlanHomeScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .fillMaxHeight()
+                                        .padding(end = 6.dp)
                                 ) {
                                     IconButton(
-                                        onClick = { navController.navigate(PLAN_CREW_ROUTE) },
+                                        onClick = { navController.navigate("${PLAN_CREW_ROUTE}/${plan.schNo}/${plan.schName}") },
                                         modifier = Modifier
-                                            .size(52.dp)
-                                            .padding(1.dp)
+                                            .size(40.dp)
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.group),
                                             contentDescription = "group Icon",
-                                            modifier = Modifier.size(50.dp),
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .background(white400)
+                                                .padding(5.dp),
                                             tint = Color.Unspecified
                                         )
                                     }
@@ -362,6 +372,7 @@ fun PlanHomeScreen(
                             }
                         }
                     }
+
                 }
             }
         }
@@ -398,7 +409,8 @@ fun PlanHomeScreen(
                     planHomeViewModel.onDismissDialog()
                 },
                 onConfrim = {
-                    navController.navigate("${PLAN_CREATE_ROUTE}/1/${it.schNo}/${it.schName}/${it.schCon}/${it.schCur}")
+//                    navController.navigate("${PLAN_CREATE_ROUTE}/1/${it.schNo}/${it.schName}/${it.schCon}/${it.schCur}")
+                    navController.navigate(PLAN_CREATE_ROUTE)
                     planHomeViewModel.onDismissDialog()
                 }
             )
@@ -427,7 +439,7 @@ fun ShowPlansDialogAfterSearch(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 plans.forEach { plan ->
-                    if(plan.memNo == -1) {
+                    if (plan.memNo == -1) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -521,125 +533,155 @@ fun ShowPlanConfigsDialog(
 }
 
 
+@Composable
+fun Screen() {
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(white100)
+//    ) {
+//        //行程表
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(10.dp)
+//                .height(300.dp)
+//                .border(1.dp, black900, shape = RoundedCornerShape(8.dp)),
+//            shape = RoundedCornerShape(8.dp), // 設定圓角
+//            colors = CardDefaults.cardColors(
+//                containerColor = purple200, // 背景顏色
+//                contentColor = purple200    // 內容顏色（可選）
+//            )
+//        ) {
+//            Image(
+//                painter = painterResource(R.drawable.dst),//預設圖
+//                contentDescription = "",
+//                contentScale = ContentScale.FillBounds,
+//                modifier = Modifier
+//                    .padding(start = 6.dp, end = 6.dp, top = 6.dp)
+//                    .fillMaxWidth()
+//                    .height(200.dp)
+//                    .clickable {
+//                        navController.navigate("${PLAN_EDIT_ROUTE}/${plan.schNo}")
+//                    }
+//            )
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(bottom = 6.dp, start = 6.dp, end = 6.dp)
+//                    .background(white100)
+//            ) {
+//                Column(
+//                    horizontalAlignment = Alignment.Start,
+//                    verticalArrangement = Arrangement.Center,
+//                    modifier = Modifier
+//                        .fillMaxWidth(0.8f)
+//                        .fillMaxHeight()
+//                        .padding()
+//                        .clip(RoundedCornerShape(8.dp)) // 裁剪為圓角
+//                ) {
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .fillMaxHeight(0.6f)
+//                    ) {
+//                        Text(
+//                            text = "${plan.schStart} ~ ${plan.schEnd}", //開始日期~結束日期
+//                            maxLines = 1,
+//                            fontSize = 24.sp,
+//                            fontWeight = FontWeight.Bold,
+//                            textAlign = TextAlign.Center,
+//                            color = black900,
+//                            modifier = Modifier.padding(start = 16.dp)
+//                        )
+//                    }
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .fillMaxHeight()
+//                    ) {
+//                        Text(
+//                            text = "${plan.schStart} ~ ${plan.schEnd}", //開始日期~結束日期
+//                            maxLines = 1,
+//                            fontSize = 16.sp,
+//                            color = black900,
+//                            modifier = Modifier.padding(start = 18.dp)
+//                        )
+//                    }
+//                }
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .fillMaxHeight()
+//                        .padding(5.dp),
+//                    verticalArrangement = Arrangement.spacedBy(5.dp),
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    Row(
+//                        horizontalArrangement = Arrangement.End,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .fillMaxHeight(0.5f)
+//                            .padding(end = 6.dp)
+//                    ) {
+//                        IconButton(
+//                            onClick = {
+//                                expandPlanConfigDialog = true
+//                                selectedPlanId = plan.schNo
+//                            },
+//                            modifier = Modifier.size(40.dp)
+//                        ) {
+//                            Icon(
+//                                painter = painterResource(id = R.drawable.more_horiz),
+//                                contentDescription = "more Icon",
+//                                modifier = Modifier
+//                                    .size(40.dp)
+//                                    .background(white400)
+//                                    .padding(5.dp),
+//                                tint = Color.Unspecified
+//                            )
+//                        }
+//                    }
+//                    Row(
+//                        horizontalArrangement = Arrangement.End,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .fillMaxHeight()
+//                            .padding(end = 6.dp)
+//                    ) {
+//                        IconButton(
+//                            onClick = { navController.navigate("${PLAN_CREW_ROUTE}/${plan.schNo}/${plan.schName}") },
+//                            modifier = Modifier
+//                                .size(40.dp)
+//                        ) {
+//                            Icon(
+//                                painter = painterResource(id = R.drawable.group),
+//                                contentDescription = "group Icon",
+//                                modifier = Modifier
+//                                    .size(40.dp)
+//                                    .background(white400)
+//                                    .padding(5.dp),
+//                                tint = Color.Unspecified
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//    }
+}
+
+
 @Preview
 @Composable
 fun PreviewPlanHomeScreen() {
-    PlanHomeScreen(
-        rememberNavController(),
-        planHomeViewModel = viewModel(),
-        requestVM = RequestVM()
-    )
+//    PlanHomeScreen(
+//        rememberNavController(),
+//        planHomeViewModel = viewModel(),
+//        requestVM = RequestVM()
+//    )
+    Screen()
 }
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth(),
-//            horizontalArrangement = Arrangement.spacedBy(6.dp),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            Spacer(
-//                modifier = Modifier
-//                    .weight(1f)
-//                    .padding(horizontal = 5.dp)
-//            ) // 中間空白，讓其他內容排在最右邊
-//            IconButton(
-//                onClick = { navController.navigate(PLAN_CREATE_ROUTE) },
-//                modifier = Modifier
-//                    .size(50.dp)
-//                    .background(Color.White)
-//            ) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.note_add),
-//                    contentDescription = "Add Icon",
-//                    modifier = Modifier.size(48.dp),
-//                    tint = Color.Unspecified
-//                )
-//            }
-//            IconButton(
-//                onClick = {
-//                },
-//                modifier = Modifier
-//                    .size(50.dp)
-//                    .background(Color.White)
-//            ) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.list_sort),
-//                    contentDescription = "sort Icon",
-//                    modifier = Modifier.size(48.dp),
-//                    tint = Color.Unspecified
-//                )
-//            }
-//        }
-//        Spacer(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(2.dp)
-//                .background(color = Color(0xFFDFDCEF))
-//        )
-
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxHeight()
-//                    .padding(start = 50.dp),
-//                verticalArrangement = Arrangement.Center,
-//                horizontalAlignment = Alignment.Start
-//            ) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.ic_member),
-//                    contentDescription = "schedule Icon",
-//                    tint = Color.Unspecified,
-//                    modifier = Modifier.size(80.dp)
-//                )
-//                Text(
-//                    text = "會員暱稱${memNo}",
-//                    style = TextStyle(
-//                        fontSize = 20.sp,
-//                        textAlign = TextAlign.Center
-//                    ),
-//                    modifier = Modifier
-//                        .padding(top = 10.dp)
-//                )
-//            }
-//            Spacer(
-//                modifier = Modifier.width(60.dp)
-//            )
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .fillMaxHeight(),
-//                verticalArrangement = Arrangement.Center
-//            ) {
-//                Row(
-//                    modifier = Modifier.fillMaxWidth()
-//                ) {
-//                    IconButton(
-//                        onClick = { navController.navigate(PLAN_CREATE_ROUTE) },
-//                        modifier = Modifier
-//                            .size(50.dp)
-//                            .background(Color.White)
-//                    ) {
-//                        Icon(
-//                            painter = painterResource(id = R.drawable.note_add),
-//                            contentDescription = "Add Icon",
-//                            modifier = Modifier.size(48.dp),
-//                            tint = Color.Unspecified
-//                        )
-//                    }
-//                }
-//                Row(
-//                    modifier = Modifier.fillMaxWidth()
-//                ) {
-//                    IconButton(
-//                        onClick = { /*排序*/ },
-//                        modifier = Modifier
-//                            .size(50.dp)
-//                            .background(Color.White)
-//                    ) {
-//                        Icon(
-//                            painter = painterResource(id = R.drawable.list_sort),
-//                            contentDescription = "list_sort Icon",
-//                            modifier = Modifier.size(48.dp),
-//                            tint = Color.Unspecified
-//                        )
-//                    }
-//                }
-//            }

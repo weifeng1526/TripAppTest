@@ -1,5 +1,6 @@
 package com.example.tripapp.ui.feature.spending.list
 
+import SpendingListViewModel
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -20,7 +21,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,11 +40,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.tripapp.R
+import com.example.tripapp.ui.feature.spending.CrewRecord
 import com.example.tripapp.ui.feature.spending.SpendingRecordVM
 import com.example.tripapp.ui.feature.spending.TotalSumVM
-import com.example.tripapp.ui.feature.spending.addlist.SPENDING_ADD_ROUTE
+import com.example.tripapp.ui.feature.spending.addlist.getSpendingAddNavigationRoute
 import com.example.tripapp.ui.feature.spending.settinglist.SPENDING_SETLIST_ROUTE
-import com.example.tripapp.ui.feature.trip.dataObjects.Plan
 import com.example.tripapp.ui.theme.*
 
 enum class tabsTrip {
@@ -56,19 +56,17 @@ enum class tabsTrip {
 
 //VM 和 UI 連結的地方（VM）
 @Composable
-fun SpendingRoute(navHostController: NavHostController) {
+fun SpendingListRoute(navHostController: NavHostController) {
     SpendingListScreen(
         navController = navHostController,
         floatingButtonAddClick = {
             //導頁專用語法
-            navHostController.navigate(SPENDING_ADD_ROUTE)
+            navHostController.navigate(getSpendingAddNavigationRoute(it, -1))
         },
         spendingSettingBtn = {
             navHostController.navigate(SPENDING_SETLIST_ROUTE)
-        },
-        schNo = 0,
-
-        )
+        }
+    )
 }
 
 //單純預覽，可以放假資料。
@@ -87,25 +85,45 @@ fun SpendingListScreen(
     spendingRecordVM: SpendingRecordVM = viewModel(),
     totalSumVM: TotalSumVM = viewModel(),
     navController: NavHostController = rememberNavController(),
+    spendingListViewModel: SpendingListViewModel = viewModel(),
 //    items:List<User> = listOf(),
-    floatingButtonAddClick: () -> Unit = {},
+    floatingButtonAddClick: (Int) -> Unit = {},
     spendingSettingBtn: () -> Unit = {},
-    schNo: Int = 0
 ) {
+    val TAG = "TAG---SpendingListScreen---"
+
 
     LaunchedEffect(Unit) {
         spendingRecordVM.initPlan()
+        //要換成清單編號
+        spendingListViewModel.GetData(2)
+        spendingListViewModel.getTripName(1)
+        Log.d(TAG, "有沒有來 :))))))))))) ")
     }
 
+    val context = LocalContext.current
     val plans by spendingRecordVM.plan.collectAsState()
     val spendList by spendingRecordVM.spendingListInfo.collectAsState()
+    val ListDetail by spendingRecordVM.tabTripListSelectedList.collectAsState()
     val tabsTripListIndex by spendingRecordVM.tabsTripListSelectedIndex.collectAsState()
-    val tabsTripListScheNo by spendingRecordVM.tabTripListSelectedList.collectAsState()
+    val tripName by spendingListViewModel.tripName.collectAsState()
+    val schNo = tripName?.getOrNull(tabsTripListIndex)?.schNo ?: 0
 
-    Log.d("TAG", "spendList:${spendList}")
-    Log.d("TAG", "totalSum: ${totalSumVM.totalSum}")
+    val spendingOneListInfo by spendingListViewModel.spendingOneListInfo.collectAsState()
 
-    val context = LocalContext.current
+    //取得行程編號
+
+//    Log.d(TAG, "${tripName?.getOrNull(tabsTripListIndex)?.schNo}")
+
+
+//    Log.d(TAG, "spendList:${spendList.getOrNull(tabsTripListIndex)}")
+    Log.d(TAG, "spendingOneListInfo: ${spendingOneListInfo}")
+//    Log.d(TAG, "tabsTripListSelectedList: ${ListDetail}")
+//    Log.d(TAG, "tabsTripListIndex: ${tabsTripListIndex}")
+
+    //這個才有真正的tab資料
+//    Log.d(TAG, "plan: ${plans.getOrNull(tabsTripListIndex)}")
+//    Log.d(TAG, "tabsTripListName: ${tripName}")
 
 
 //
@@ -159,6 +177,7 @@ fun SpendingListScreen(
                     Button(
                         onClick = {
                             spendingSettingBtn()
+
                             Toast.makeText(context, "設定", Toast.LENGTH_SHORT).show()
 
                         },
@@ -167,7 +186,7 @@ fun SpendingListScreen(
                             contentColor = purple300
                         ),
                         border = BorderStroke(
-                            2.dp, Color(0xFFDFDCEF),
+                            2.dp, color = white400,
                         )
                     ) {
                         Image(
@@ -343,7 +362,7 @@ fun SpendingListScreen(
                 containerColor = white300
             ) {
 
-                plans.forEachIndexed { index: Int, plan: Plan ->
+                tripName?.forEachIndexed { index: Int, tripName: CrewRecord ->
                     Tab(
                         modifier = Modifier
                             .background(
@@ -351,7 +370,7 @@ fun SpendingListScreen(
                             ),
                         text = {
                             Text(
-                                text = plan.schName,
+                                text = tripName.schName,
                                 fontSize = 16.sp
                             )
                         },
@@ -373,7 +392,8 @@ fun SpendingListScreen(
                 tripTab(
                     navHostController = navController,
                     spendingRecordVM = spendingRecordVM,
-                    spendingListStatus = tabsTripListScheNo?.second ?: listOf()
+                    spendingListStatus = ListDetail?.second ?: listOf(),
+                    schoNo = schNo
                 )
             }
 
@@ -389,7 +409,8 @@ fun SpendingListScreen(
 
     ) {
         FloatingActionButton(
-            onClick = floatingButtonAddClick,
+//            onClick = {floatingButtonAddClick.invoke(ListDetail?.first ?:0)},
+            onClick = { floatingButtonAddClick.invoke(schNo) },
             containerColor = purple200,
             shape = RoundedCornerShape(50),
             modifier = Modifier.align(Alignment.BottomEnd)

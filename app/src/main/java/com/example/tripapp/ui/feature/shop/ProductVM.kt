@@ -15,9 +15,6 @@ class ProductVM : ViewModel() {
     val productDetailState: StateFlow<Product> = _productDetailState.asStateFlow()
     fun setDetailProduct(product: Product) {
         _productDetailState.value = product
-//        _productDetailState.updateAndGet {
-//            product
-//        }
     }
 
     // MutableStateFlow用來監控指定資料狀態，當資料一改變即可通知對應畫面更新
@@ -30,11 +27,6 @@ class ProductVM : ViewModel() {
             _productsState.value = fetchProducts()
         }
     }
-
-//    init {
-//        _productsState.update { fetchProducts() }
-//    }
-//}
 
     /**
      * 載入測試需要資料
@@ -51,30 +43,6 @@ class ProductVM : ViewModel() {
         }
     }
 }
-
-//    suspend fun productbox(
-//        prodName: String,
-//        prodPrice: Int,
-//        byteArray: ByteArray?
-//    ): Product {
-//        // 要上傳圖文，包裝成form data格式
-//        val prodNamePart = prodName.toRequestBody("text/plain".toMediaTypeOrNull())
-//        val prodPricePart = prodPrice.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-//        val picRequestBody =
-//            byteArray?.toRequestBody("image/jpeg".toMediaTypeOrNull(), 0, byteArray.size)
-//        val picPart =
-//            picRequestBody?.let { MultipartBody.Part.createFormData("image", "upload.jpg", it) }
-//        try {
-//            val response = RetrofitInstance.api.productbox(prodNamePart, prodPricePart, picPart)
-//            return response.isSuccessful
-//        } catch (e: Exception) {
-//            Log.e(android.R.attr.tag, "error: ${e.message}")
-//            return false
-//        }
-//    }
-//}
-
-
 
 //        return listOf(
 //            Product(

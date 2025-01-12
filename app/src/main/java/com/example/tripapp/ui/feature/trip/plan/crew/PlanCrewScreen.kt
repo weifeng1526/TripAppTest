@@ -1,5 +1,6 @@
 package com.example.tripapp.ui.feature.trip.plan.crew
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,6 +24,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,14 +36,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.swithscreen.PlanHomeScreen
 import com.example.tripapp.R
+import com.example.tripapp.ui.feature.trip.dataObjects.CrewMmeber
 import com.example.tripapp.ui.feature.trip.plan.home.PLAN_HOME_ROUTE
 
 @Composable
-fun PlanCrewScreen(navController: NavController) {
+fun PlanCrewScreen(
+    navController: NavController,
+    planCrewViewModel: PlanCrewViewModel,
+    schNo: Int,
+    schName: String
+) {
+    val crewOfMembers by planCrewViewModel.crewOfMembersSatate.collectAsState()
+    LaunchedEffect(Unit) {
+        planCrewViewModel.getCrewMembersRequest(schNo) {
+            planCrewViewModel.setCrewMembers(it)
+            Log.d("tag_PlanCrewScreen", "${it}")
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,19 +66,15 @@ fun PlanCrewScreen(navController: NavController) {
             .background(Color.White)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .background(Color.LightGray),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
-        ){
-            Button(
-                onClick = { navController.navigate(PLAN_HOME_ROUTE)},
-                modifier = Modifier.width(50.dp)
-            ) {
-
-            }
+        ) {
             Row(
-                modifier = Modifier.wrapContentSize()
+                modifier = Modifier
+                    .wrapContentSize()
                     .padding(6.dp)
                     .background(Color.White),
                 verticalAlignment = Alignment.CenterVertically,
@@ -68,24 +82,30 @@ fun PlanCrewScreen(navController: NavController) {
                 Icon(
                     painter = painterResource(id = R.drawable.group),
                     contentDescription = "schedule Icon",
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier
+                        .size(48.dp)
+                        .padding(end = 6.dp),
                     tint = Color.Unspecified
                 )
                 Text(
-                    text = "我的朋友"
+                    text = crewOfMembers.firstOrNull {
+                        it.crewIde.toInt() == 2
+                    }?.crewName ?: ""
                 )
             }
             //Spacer(Modifier.fillMaxWidth(1f))
             Row(
-                modifier = Modifier.wrapContentSize()
+                modifier = Modifier
+                    .wrapContentSize()
                     .background(Color.White)
-                    .clickable {  },
+                    .clickable { },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(
-                    modifier = Modifier.size(50.dp)
+                    modifier = Modifier
+                        .size(50.dp)
                         .background(Color.White),
-                    onClick = {}
+                    onClick = { navController.navigate("${MEMBER_INVITE_ROUTE}/${schNo}/${schName}") }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.person_add),
@@ -100,22 +120,26 @@ fun PlanCrewScreen(navController: NavController) {
             modifier = Modifier.fillMaxSize(),
             columns = GridCells.Fixed(1)
         ) {
-            items(2) {
-                ShowPersonRow()
+            items(crewOfMembers.size) {
+                ShowPersonRow(
+                    planCrewViewModel = planCrewViewModel,
+                    crewMmeber = crewOfMembers[it]
+                )
             }
         }
     }
 }
 
 @Composable
-fun ShowPersonRow() {
-    var test by remember { mutableStateOf("") }
+fun ShowPersonRow(
+    planCrewViewModel: PlanCrewViewModel,
+    crewMmeber: CrewMmeber
+) {
     Box(
         modifier = Modifier.wrapContentHeight()
     ) {
         ListItem(
-            modifier = Modifier.border(1.dp, Color.LightGray)
-                .clickable { test = "clicked card" },
+            modifier = Modifier.border(1.dp, Color.LightGray),
             leadingContent = {
                 Icon(
                     painter = painterResource(id = R.drawable.person),
@@ -125,15 +149,18 @@ fun ShowPersonRow() {
                 )
             },
             headlineContent = {
-                Text(text = "匿稱")
+                Text(
+                    text = crewMmeber.memName
+                )
             },
             supportingContent = {
-                Text(text = "abc@gmail.com")
+                Text(text = crewMmeber.memEmail)
             },
         )
         IconButton(
             onClick = {},
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier
+                .size(32.dp)
                 .align(Alignment.TopEnd),
         ) {
             Icon(
@@ -147,11 +174,13 @@ fun ShowPersonRow() {
 }
 
 
-
 @Preview
 @Composable
 fun PreviewPlanCrewScreen() {
     PlanCrewScreen(
-        rememberNavController()
+        navController = rememberNavController(),
+        planCrewViewModel = viewModel(),
+        schNo = 1,
+        schName = ""
     )
 }

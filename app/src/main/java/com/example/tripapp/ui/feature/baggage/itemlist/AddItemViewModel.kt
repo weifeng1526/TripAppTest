@@ -1,10 +1,12 @@
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tripapp.ui.feature.baggage.BagList
 import com.example.tripapp.ui.feature.baggage.Item
 import com.ron.restdemo.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -19,33 +21,33 @@ class AddItemViewModel : ViewModel() {
      */
     //    第五點待會處理
 //    按下儲存按鈕時，將選中的物品加入 bag_list
-//    fun saveSelectedItems(memNo: Int, schNo: Int) {
-//        viewModelScope.launch {
-//            try {
-//                val selectedItems = _checkedState.value.filterValues { it }.keys
-//                selectedItems.forEach { itemNo ->
-//                    val bagListEntry = BagList(memNo, schNo, itemNo, false)
-//                    RetrofitInstance.api.AddBagItem(bagListEntry)
-//                }
-//                Log.d("AddItemViewModel", "Items saved successfully.")
-//            } catch (e: Exception) {
-//                Log.e("AddItemViewModel", "Error saving items: ${e.message}")
-//            }
-//        }
-//    }
+    fun saveSelectedItems(memNo: Int, schNo: Int) {
+        viewModelScope.launch {
+            try {
+                val selectedItems = _checkedState.value.filterValues { it }.keys
+                selectedItems.forEach { itemNo ->
+                    val bagListEntry = BagList(memNo, schNo, itemNo, false)
+                    RetrofitInstance.api.AddBagItem(bagListEntry)
+                }
+                Log.d("AddItemViewModel", "Items saved successfully.")
+            } catch (e: Exception) {
+                Log.e("AddItemViewModel", "Error saving items: ${e.message}")
+            }
+        }
+    }
 
 
 
 //原本的功能
 
-//    // 保存编辑状态
-//    private val _editingItem = MutableStateFlow<Map<String, Boolean>>(emptyMap())
-//    val editingItem = _editingItem.asStateFlow()
-//
-//    // 保存编辑文字
-//    private val _editedText = MutableStateFlow<Map<String, String>>(emptyMap())
-//    val editedText = _editedText.asStateFlow()
-//
+    // 保存编辑状态
+    private val _editingItem = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    val editingItem = _editingItem.asStateFlow()
+
+    // 保存编辑文字
+    private val _editedText = MutableStateFlow<Map<String, String>>(emptyMap())
+    val editedText = _editedText.asStateFlow()
+
 
 
     // 保存物品分組資料

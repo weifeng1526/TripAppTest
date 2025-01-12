@@ -224,12 +224,7 @@ fun spendingDepositRoute(
                         verticalAlignment = Alignment.CenterVertically,
 
                         ) {
-//                        Text(
-//                            text = "20,000",
-//                            fontSize = 44.sp,
-//                            fontWeight = FontWeight.Bold,
-//                            color = black900
-//                        )
+//
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()

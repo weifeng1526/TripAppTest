@@ -47,11 +47,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.tripapp.R
+import com.example.tripapp.ui.feature.member.GetUid
+import com.example.tripapp.ui.feature.member.MemberRepository
 import com.example.tripapp.ui.feature.spending.list.SPENDING_LIST_ROUTE
 import com.example.tripapp.ui.feature.trip.notes.note.NOTES_ROUTE
 import com.example.tripapp.ui.feature.trip.plan.edit.PlanEditViewModel
 import com.example.tripapp.ui.feature.trip.plan.home.PlanHomeViewModel
 import com.example.tripapp.ui.feature.trip.dataObjects.Destination
+import com.example.tripapp.ui.feature.trip.notes.show.SHOW_SCH_ROUTE
 
 import com.example.tripapp.ui.restful.RequestVM
 import com.example.tripapp.ui.theme.black800
@@ -92,7 +95,7 @@ fun ShowSchScreen(
 //    pair.first
 //    pair.second
     val selectedDestForNote = destForNoteByDate.find { it.first == selectDate }?.second ?: listOf()
-
+    val uid = GetUid(MemberRepository)
     //
 
     LaunchedEffect(destForNote) {
@@ -100,6 +103,9 @@ fun ShowSchScreen(
             val planResponse = requestVM.GetPlan(schNo)
             planResponse?.let {
                 planHomeViewModel.setPlan(it) // 更新 ViewModel 的數據
+            }
+            if (planForNote.schStart.isNotEmpty()) {
+                selectDate = planForNote.schStart
             }
             Log.d("planResponse", "$planResponse")
             Log.d("planHomeViewModel", "${planForNote}")
@@ -230,7 +236,7 @@ fun ShowSchScreen(
                                     .offset(25.dp)
                             ) {
                                 Text(
-                                    text = destForNote.dstName,
+                                    text = "${destForNote.dstName}. ${destForNote.dstNo}",
                                     modifier = Modifier.fillMaxWidth(0.8f),
                                     fontSize = 22.sp
                                 )
@@ -238,7 +244,9 @@ fun ShowSchScreen(
                                     painter = painterResource(R.drawable.edit_note),
                                     contentDescription = null,
                                     modifier = Modifier.size(30.dp).clickable {
-                                        navController.navigate(NOTES_ROUTE)
+                                        Log.d("NOTES_ROUTE", "dstNo: ${destForNote.dstNo}")
+                                        Log.d("NOTES_ROUTE", "uid: ${uid}")
+                                        navController.navigate("$NOTES_ROUTE/${destForNote.dstNo}/${uid}")
                                     }
                                 )
                             }

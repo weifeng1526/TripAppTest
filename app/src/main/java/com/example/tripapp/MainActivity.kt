@@ -43,6 +43,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.tripapp.ui.feature.baggage.baglist.BAG_NAVIGATION_ROUTE
 import com.example.tripapp.ui.feature.baggage.baglist.bagListScreenRoute
+import com.example.tripapp.ui.feature.baggage.baglist.bagListScreenRouteSelected
+import com.example.tripapp.ui.feature.baggage.itemlist.ADDITEM_NAVIGATION_ROUTE
 import com.example.tripapp.ui.feature.baggage.itemlist.addItemScreenRoute
 import com.example.tripapp.ui.feature.map.mapRoute
 import com.example.tripapp.ui.feature.member.IsLogin
@@ -51,10 +53,8 @@ import com.example.tripapp.ui.feature.member.home.MEMBER_ROUTE
 import com.example.tripapp.ui.feature.member.home.memberRoute
 import com.example.tripapp.ui.feature.member.home.tabs.notifyRoute
 import com.example.tripapp.ui.feature.member.login.MEMBER_LOGIN_ROUTE
-import com.example.tripapp.ui.feature.member.login.MemberLoginScreen
 import com.example.tripapp.ui.feature.member.login.memberLoginRoute
 import com.example.tripapp.ui.feature.member.signup.MEMBER_SIGNUP_ROUTE
-import com.example.tripapp.ui.feature.member.signup.MemberSignUpScreen
 import com.example.tripapp.ui.feature.member.signup.memberSignUpRoute
 import com.example.tripapp.ui.feature.member.turfav.turFavRoute
 import com.example.tripapp.ui.feature.shop.SHOP_ROUTE
@@ -65,11 +65,13 @@ import com.example.tripapp.ui.feature.spending.list.SPENDING_LIST_ROUTE
 import com.example.tripapp.ui.feature.spending.list.spendingListRoute
 import com.example.tripapp.ui.feature.spending.setting.spendingSetRoute
 import com.example.tripapp.ui.feature.spending.settinglist.spendingSetListRoute
+import com.example.tripapp.ui.feature.trip.notes.note.notesRoute
 import com.example.tripapp.ui.feature.trip.notes.select.SELECT_ROUTE
 import com.example.tripapp.ui.feature.trip.notes.select.selectRoute
 import com.example.tripapp.ui.feature.trip.notes.show.showSchRoute
 import com.example.tripapp.ui.feature.trip.plan.alter.planAlterRoute
 import com.example.tripapp.ui.feature.trip.plan.create.planCreateRoute
+import com.example.tripapp.ui.feature.trip.plan.crew.memberInviteRoute
 import com.example.tripapp.ui.feature.trip.plan.crew.planCrewRoute
 import com.example.tripapp.ui.feature.trip.plan.edit.planEditRoute
 import com.example.tripapp.ui.feature.trip.plan.home.PLAN_HOME_ROUTE
@@ -158,6 +160,27 @@ fun tripApp(
         } else {
             false
         } // 若為登入、註冊頁面，不顯示TopBar跟BottomBar
+    val tabsRoute =
+        if (
+            currentRoute == SELECT_ROUTE ||
+            currentRoute == SHOP_ROUTE ||
+            currentRoute == PLAN_HOME_ROUTE ||
+            currentRoute == SPENDING_LIST_ROUTE ||
+            currentRoute == MEMBER_ROUTE
+        ) {
+            true
+        } else {
+            false
+        }
+    val bagRoute = if (
+        currentRoute == ADDITEM_NAVIGATION_ROUTE ||
+        currentRoute == BAG_NAVIGATION_ROUTE
+    ) {
+        true
+    } else {
+        false
+    }
+    val bagTittle = "我的行李"
 //    val isShowTopBar = if (currentRoute == BAG_NAVIGATION_ROUTE) {true} else {false}
     val tabsBottom: List<TabsBottom> = TabsBottom.entries
 
@@ -186,6 +209,11 @@ fun tripApp(
                                     text = tab.title,
                                     fontSize = 19.sp
                                 )
+                            } else if (bagRoute) {
+                                Text(
+                                    text = bagTittle,
+                                    fontSize = 19.sp
+                                )
                             }
                         }
                     },
@@ -194,11 +222,6 @@ fun tripApp(
                     ),
                     navigationIcon = {
                         //隱藏左上角的回前一頁箭頭
-//                        val currentRoute = navController.currentBackStackEntry?.destination?.route
-//                        if (
-//                            currentRoute != null &&
-//                            !tabsBottom.values().map { it.route }.contains(currentRoute)
-//                            ) {
                         when (route) {
                             SELECT_ROUTE -> {}
                             SHOP_ROUTE -> {}
@@ -216,7 +239,6 @@ fun tripApp(
                                 )
                             }
                         }
-//                        }
                     },
                 )
             }
@@ -298,7 +320,7 @@ fun TripNavHost(
 
         // 畫面路徑-Ashley
         bagListScreenRoute(navController = navController)
-//        bagListScreenRouteSelected(navController = navController)
+        bagListScreenRouteSelected(navController = navController)
         addItemScreenRoute(navController = navController)
 
         //畫面路徑-leo
@@ -307,6 +329,8 @@ fun TripNavHost(
         planEditRoute(navController = navController)
         planCrewRoute(navController = navController)
         planAlterRoute(navController = navController)
+        memberInviteRoute(navController = navController)
+
 
         //畫面路徑-Aaron
         shopRoute(navController = navController)
@@ -322,6 +346,7 @@ fun TripNavHost(
         //畫面路徑-Jonas
         selectRoute(navController = navController)
         showSchRoute(navController = navController)
+        notesRoute(navController = navController)
 
         //畫面路徑-Sue
         mapRoute(navController = navController)

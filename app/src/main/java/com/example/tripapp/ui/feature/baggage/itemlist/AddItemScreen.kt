@@ -30,18 +30,22 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.tripapp.R
 import com.example.tripapp.ui.feature.baggage.Item
+import com.example.tripapp.ui.feature.member.GetUid
+import com.example.tripapp.ui.feature.member.MemberRepository
 
 @Composable
-fun AddItemRoute(navController: NavHostController) {
-    AddItemScreen(navController)
+fun AddItemRoute(navController: NavHostController, schNo: Int) {
+    AddItemScreen(navController, schNo)
 }
 
 @SuppressLint("RememberReturnType")
 @Composable
 fun AddItemScreen(
     navController: NavHostController,
+    schNo: Int, // 添加 schNo 參數
     addItemViewModel: AddItemViewModel = viewModel()
 ) {
+    val  memNo = GetUid(MemberRepository)
     // 確保在初次進入頁面時呼叫 fetchData()
     LaunchedEffect(Unit) {
         addItemViewModel.fetchData()
@@ -83,7 +87,8 @@ fun AddItemScreen(
             // 儲存變更
             IconButton(onClick = {
                 navController.popBackStack() // 返回行李
-//                addItemViewModel.saveSelectedItems(memNo = 1, schNo = 1)
+                addItemViewModel.saveSelectedItems( memNo , schNo )
+                Log.d("AddItemScreen", "${memNo}, ${schNo}")
             }) {
                 Icon(
                     imageVector = Icons.Filled.CheckCircle,
@@ -98,8 +103,8 @@ fun AddItemScreen(
         val sections by addItemViewModel.sections.collectAsState()
         val expandedStates by addItemViewModel.expandedStates.collectAsState()
         val checkedState by addItemViewModel.checkedState.collectAsState()
-//        val editingItem by addItemViewModel.editingItem.collectAsState()
-//        val editedText by addItemViewModel.editedText.collectAsState()
+        val editingItem by addItemViewModel.editingItem.collectAsState()
+        val editedText by addItemViewModel.editedText.collectAsState()
 
         LaunchedEffect(sections) {
             Log.e("section: ", "${sections.size}")
@@ -118,8 +123,8 @@ fun AddItemScreen(
             },
 
 
-//            editingItem = editingItem,
-//            editedText = editedText,
+            editingItem = editingItem,
+            editedText = editedText,
             innerPadding = PaddingValues(12.dp),
             addItemViewModel = addItemViewModel  // 也确保传递 ViewModel
         )
@@ -134,8 +139,8 @@ fun ExpandableLists(
     onToggleExpanded: (Int) -> Unit,           // 切換展開狀態的回調
     onCheckedChange: (Int, Boolean) -> Unit,  // 更新勾選狀態的回調
 
-//    editingItem: Map<String, Boolean>,
-//    editedText: Map<String, String>,
+    editingItem: Map<String, Boolean>,
+    editedText: Map<String, String>,
     innerPadding: PaddingValues,
     addItemViewModel: AddItemViewModel  // 添加 addItemViewModel 参数
 
@@ -348,5 +353,5 @@ fun ExpandableLists(
 @Preview
 @Composable
 fun PreviewAddItemScreen() {
-    AddItemScreen(navController = NavHostController(LocalContext.current))
+    AddItemScreen(navController = NavHostController(LocalContext.current), schNo = 1)
 }

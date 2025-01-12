@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -53,9 +54,11 @@ import com.example.tripapp.ui.theme.red100
 import com.example.tripapp.ui.theme.red200
 
 @Composable
-fun ProductListScreen(
+fun OrderListScreen(
     navController: NavHostController,
+    memberId: Int,
     productVM: ProductVM,
+    orderVM: OrderVM,
     tabVM: TabVM
 ) {
     // TabRow顯示與否
@@ -63,7 +66,7 @@ fun ProductListScreen(
 
 //    val memNo = 1
     // 從StateFlow取得最新資料
-    val products by productVM.productsState.collectAsState()
+    val orders by orderVM.ordersState.collectAsState()
     var inputText by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -94,13 +97,13 @@ fun ProductListScreen(
             )
         }
         // 一定要套用innerPadding，否則內容無法跟TopAppBar對齊
-        ProductLists(
-            products.filter { it.prodName.contains(inputText, true) },
+        OrderLists(
+            orders.filter { it.prodName.contains(inputText, true) },
             // 項目被點擊時執行
             onItemClick = {
                 Log.d("tag_", "onItemClick")
                 // 將點擊的book存入bookVM，然後切換至BookDetail頁面
-                productVM.setDetailProduct(it)
+                orderVM.setDetailOrder(it)
                 Log.d("tag_", "setDetailProduct")
                 navController.navigate(Screen.ProductDetail.name)
             }
@@ -110,21 +113,20 @@ fun ProductListScreen(
 
 /**
  * 列表內容
- * @param products 欲顯示的書籍清單
+ * @param orders 欲顯示的書籍清單
  */
 @Composable
-fun ProductLists(
-    products: List<Product>,
-    onItemClick: (Product) -> Unit,
+fun OrderLists(
+    orders: List<Order>,
+    onItemClick: (Order) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        items(products) { product ->
+        items(orders) { order ->
 //             使用 Card 包裝每個項目，提供陰影和圓角效果
             Card(
                 modifier = Modifier
-                    .clickable { onItemClick(product) }  // 點擊事件
                     .padding(16.dp),  // Card 的內邊距
                 elevation = 4.dp,  // 設定陰影深度
                 shape = RoundedCornerShape(8.dp)  // 圓角形狀
@@ -133,17 +135,12 @@ fun ProductLists(
                 Column(
                     modifier = Modifier.padding(16.dp)  // Card 內部的內邊距
                 ) {
-//                    // 顯示圖片
-//                    val painter = painterResource(product.prodPic)
-//                    Image(
-//                        painter = painter,
-//                        contentDescription = "product",
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(product.prodPic)  // prodPic 可以是 URL 或 Base64 字符串
+                            .data(order.prodPic)  // prodPic 可以是 URL 或 Base64 字符串
                             .crossfade(true)
-                            .memoryCacheKey(product.prodPic)
-                            .diskCacheKey(product.prodPic)
+                            .memoryCacheKey(order.prodPic)
+                            .diskCacheKey(order.prodPic)
                             .build(),
                         contentDescription = "product",
                         modifier = Modifier
@@ -160,13 +157,13 @@ fun ProductLists(
                         verticalArrangement = Arrangement.spacedBy(4.dp)  // 文字之間的間距
                     ) {
                         Text(
-                            text = product.prodName,
+                            text = order.prodName,
                             fontSize = 24.sp,
                             style = MaterialTheme.typography.h6,
                             color = purple400
                         )
                         Text(
-                            text = "價格 : $" + product.prodPrice.toString() + "元",
+                            text = "價格 : $" + order.prodPrice.toString() + "元",
                             style = MaterialTheme.typography.h6,
                             color = red200
                         )

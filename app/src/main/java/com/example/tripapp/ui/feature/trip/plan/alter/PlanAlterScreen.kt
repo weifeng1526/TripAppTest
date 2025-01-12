@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,11 +66,12 @@ fun PlanAlterScreen(
 ) {
     var coroutineScope = rememberCoroutineScope()
     val plans by planHomeViewModel.plansState.collectAsState()
-    val plan = plans.first {
-        it.schNo == schNo
+    val plan by planHomeViewModel.planState.collectAsState()
+    LaunchedEffect(Unit) {
+        planHomeViewModel.setPlanByApi(schNo)
     }
 
-
+    Log.d("enter3", "enter4")
     Log.d("d plans", "size: ${plans.size}")
     Log.e("e plans", "size: ${plans.size}")
     Log.d("d plans", "no: ${plan.schNo}")

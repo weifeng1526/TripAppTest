@@ -1,6 +1,6 @@
 package com.example.tripapp.ui.feature.spending.list
 
-import android.util.Log
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,30 +32,36 @@ import androidx.navigation.compose.rememberNavController
 import com.example.tripapp.R
 import com.example.tripapp.ui.feature.spending.SpendingRecordVM
 import com.example.tripapp.ui.feature.spending.SpendingRecord
+import com.example.tripapp.ui.feature.spending.addlist.SPENDING_ADD_KEYID
 import com.example.tripapp.ui.feature.spending.addlist.SPENDING_ADD_ROUTE
+import com.example.tripapp.ui.feature.spending.addlist.SpendingAddViewModel
+import com.example.tripapp.ui.feature.spending.addlist.getSpendingAddNavigationRoute
 import com.example.tripapp.ui.theme.*
 
 
 @Preview
 @Composable
 fun tripTabPre() {
-    tripTab(rememberNavController() )
+    tripTab(
+        rememberNavController(),
+        spendingRecordVM = viewModel(),
+        spendingListStatus = listOf(),
+        schoNo = 0,
+    )
 }
-
 
 
 @Composable
 fun tripTab(
     navHostController: NavHostController,
     spendingRecordVM: SpendingRecordVM = viewModel(),
-    spendingListStatus: List<SpendingRecord> = listOf()
+    spendingListStatus: List<SpendingRecord> = listOf(),
+    schoNo: Int
 ) {
     //資料流，每一頁都可以動（新增修改），最後是把最新狀態撈出來。
 
 
 //    （0預設;1食物;2交通;3票卷;4住宿;5購物;6娛樂;-1其他）
-
-
 
 
     Column(
@@ -68,7 +74,7 @@ fun tripTab(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
                 .fillMaxWidth(),
-            ) {
+        ) {
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -79,7 +85,11 @@ fun tripTab(
 
             Column {
                 spendingListStatus.forEach {
-                    spendingListStatusRow(it, navController = navHostController)
+                    spendingListStatusRow(
+                        schNo = schoNo,
+                        spendingListStatus = it, navController = navHostController,
+                        spendingAddViewModel = viewModel()
+                    )
                 }
             }
 
@@ -92,12 +102,16 @@ fun tripTab(
 }
 
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun spendingListStatusRow(
+    schNo: Int,
     spendingListStatus: SpendingRecord,
+    spendingAddViewModel: SpendingAddViewModel,
     navController: NavHostController
 ) {
 
+//    Log.d("TAG", "spendingListStatusRow: $spendingListStatus")
     val classNametoString: Map<Int, String> = mapOf(
         -1 to "其他",
         1 to "食物",
@@ -106,14 +120,13 @@ fun spendingListStatusRow(
         4 to "住宿",
         5 to "購物",
         6 to "娛樂",
-
     )
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(20.dp, 0.dp)
-            .clickable { navController.navigate(SPENDING_ADD_ROUTE) },
-
+            .clickable {
+                navController.navigate(getSpendingAddNavigationRoute(spendingListStatus.schNo,spendingListStatus.costNo)) },
         ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -143,8 +156,6 @@ fun spendingListStatusRow(
                 ) {
 
 
-
-
                     Text(
                         //直接使用屬性，不是物件的，不要搞搞混
                         //消費類別
@@ -160,7 +171,7 @@ fun spendingListStatusRow(
                             .height(14.dp)
                     )
 
-                    if ( spendingListStatus.costItem == ""){
+                    if (spendingListStatus.costItem == "") {
                         Text(
                             //消費項目
                             text = "----",
@@ -168,7 +179,7 @@ fun spendingListStatusRow(
                             lineHeight = 20.sp,
                             color = black600,
                         )
-                    }else{
+                    } else {
                         Text(
                             //消費項目
                             text = spendingListStatus.costItem,
@@ -178,13 +189,12 @@ fun spendingListStatusRow(
                     }
 
 
-
                 }
 
 
                 Text(
                     //消費時間
-                    text = "時間",
+                    text = spendingListStatus.crCostTime,
                     fontSize = 15.sp,
                     color = black600
                 )
@@ -206,7 +216,7 @@ fun spendingListStatusRow(
 
                         Text(
                             //消費金額
-                            text =spendingListStatus.costPrice.toString(),
+                            text = spendingListStatus.costPrice.toString(),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold,
                             textAlign = TextAlign.End,
@@ -242,7 +252,7 @@ fun spendingListStatusRow(
                 }
                 Text(
                     //均分人數
-                    text ="Share by People",
+                    text = "Share by ${spendingAddViewModel.countCrew.value} People",
                     fontSize = 14.sp,
                     lineHeight = 24.sp,
                     color = black600,

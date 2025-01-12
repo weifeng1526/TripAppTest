@@ -1,14 +1,12 @@
 package com.example.tripapp.ui.feature.spending.addlist
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,11 +18,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -32,41 +27,30 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerColors
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -76,11 +60,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.tripapp.R
 import com.example.tripapp.ui.feature.spending.list.SPENDING_LIST_ROUTE
 import com.example.tripapp.ui.theme.*
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.ZoneId
@@ -89,15 +74,21 @@ import java.time.format.FormatStyle
 
 
 @Composable
-fun SpendingRoute(navHostController: NavHostController) {
+fun SpendingAddRoute(navHostController: NavHostController, schNo: Int, costNo: Int) {
     SpendingAddScreen(
-        floatingButtonSaveClick = {
-            //導頁專用語法
-            navHostController.navigate(SPENDING_LIST_ROUTE)
-        },
+        schNo = schNo,
+        costNo = costNo,
+//        floatingButtonSaveClick = {
+//            //導頁專用語法
+//            navHostController.navigate(SPENDING_LIST_ROUTE)
+//        },
         saveButtonClick = {
             navHostController.navigate(SPENDING_LIST_ROUTE)
-        }
+        },
+        spendingDeleteBtn = {
+            navHostController.navigate(SPENDING_LIST_ROUTE)
+        },
+        spendingAddViewModel = viewModel()
     )
 
 }
@@ -105,7 +96,14 @@ fun SpendingRoute(navHostController: NavHostController) {
 @Preview
 @Composable
 fun PreviewSpendingRoute() {
-    SpendingAddScreen()
+    SpendingAddScreen(
+        floatingButtonSaveClick = {},
+        spendingAddViewModel = SpendingAddViewModel(),
+        schNo = 0,
+        costNo = 0,
+//        spendingDeleteBtn = {},
+//        saveButtonClick = {},
+    )
 }
 
 
@@ -125,86 +123,127 @@ fun PreviewSpendingRoute() {
 fun SpendingAddScreen(
     floatingButtonSaveClick: () -> Unit = {},
     saveButtonClick: () -> Unit = {},
-//    DatePicker: (DatePickerState, DatePickerColors) -> Unit = {}
-
-
+    spendingDeleteBtn: () -> Unit = {},
+    spendingAddViewModel: SpendingAddViewModel,
+    schNo: Int = 0,
+    costNo: Int = -1
 ) {
+
+
     val context = LocalContext.current
-    var ccySelected by remember { mutableStateOf("日幣") }
-    var moneyInput by remember { mutableStateOf("") }
-    var inputCurrent by remember { mutableStateOf("JPY") }
-
+    val TAG = "TAG---SpendingAddScreen---"
+    val scope = rememberCoroutineScope()
+//    var ccySelected by remember { mutableStateOf("日幣") }
+    val ccySelected by spendingAddViewModel.ccySelected.collectAsState()
+//    var moneyInput by remember { mutableStateOf("") }
+    val moneyInput by spendingAddViewModel.moneyInput.collectAsState()
+//    var inputCurrent by remember { mutableStateOf("JPY") }
+    val inputCurrent by spendingAddViewModel.inputCurrent.collectAsState()
     var payByExpanded by remember { mutableStateOf(false) }
-    var payBySelect by remember { mutableStateOf("Rubyyyyyer") }
-
-    var itemName by remember { mutableStateOf("") }
+//    var payBySelect by remember { mutableStateOf("Rubyyyyyer") }
+    val payBySelect by spendingAddViewModel.payBySelect.collectAsState()
+//    var itemName by remember { mutableStateOf("") }
 //    var itemNameImg by remember { mutableStateOf("") }
-
+    val itemName by spendingAddViewModel.itemName.collectAsState()
     //日期
     var showDatePickerDialog by remember { mutableStateOf(false) }
-//    var spendTime by remember { mutableStateOf("") }
-    var spendTime by remember { mutableStateOf("") }
+
+//    var costTime by remember { mutableStateOf("") }
+    val costTime by spendingAddViewModel.costTime.collectAsState()
 
 
-    var swSplit by remember { mutableStateOf(false) }
-    var txSplitMethod by remember { mutableStateOf("（公費支出）") }
+    var swSplit by remember { mutableStateOf(true) }
+    var txSplitMethod by remember { mutableStateOf("（全選）") }
     //下拉選單
     var ccyExpanded by remember { mutableStateOf(false) }
-    var selectedClassname by remember { mutableStateOf("") }
+//    var selectedClassname by remember { mutableStateOf("") }
+
+    val selectedClassname by spendingAddViewModel.selectedClassname.collectAsState()
+    var selectedClassimg: String? by remember { mutableStateOf(null) }
+//    val selectedClassimg by spendingAddViewModel.selectedClassimg.collectAsState()
+
+//    val manyPeople by remember { mutableIntStateOf(0) }
 
 
-    val btnSpendingClass = remember {
-        mutableStateOf(
-            mapOf(
-                "食物" to "ic_cat_food",
-                "交通" to "ic_cat_tfc",
-                "票券" to "ic_cat_tix",
-                "住宿" to "ic_cat_hotel",
-                "購物" to "ic_cat_shop",
-                "娛樂" to "ic_cat_ent",
-                "其他" to "ic_cat_other"
-
-            )
-        )
+    LaunchedEffect(Unit) {
+        Log.d(TAG, "$schNo")
+        spendingAddViewModel.tripCrew(schNo)
     }
 
-    val chmember = remember {
-        mutableStateOf(
-            mapOf(
-                "ruby" to false,
-                "selin" to false,
-                "sean" to false,
-                "brown" to false,
-                "cony" to false
-            )
-        )
+    LaunchedEffect(Unit) {
+        if (costNo != -1) {
+            spendingAddViewModel.fetchFindOneTripsSpending(costNo)
+        }
     }
+
+
+//    NOT NULL （0預設;1食物;2交通;3票卷;4住宿;5購物;6娛樂;-1其他）
+    val classNametoString: Map<Int, String> = mapOf(
+        -1 to "其他",
+        1 to "食物",
+        2 to "交通",
+        3 to "票卷",
+        4 to "住宿",
+        5 to "購物",
+        6 to "娛樂",
+
+        )
+
+
+//本來要用迴圈跑但一直失敗，先放這！
+//    val btnSpendingClass = remember {
+//        mutableStateOf(
+//            mapOf(
+//                "食物" to "ic_cat_food",
+//                "交通" to "ic_cat_tfc",
+//                "票券" to "ic_cat_tix",
+//                "住宿" to "ic_cat_hotel",
+//                "購物" to "ic_cat_shop",
+//                "娛樂" to "ic_cat_ent",
+//                "其他" to "ic_cat_other"
+//
+//            )
+//        )
+//    }
+
+
+    val chmember by spendingAddViewModel.chmember.collectAsState()
+//    val chmember = remember {
+//        mutableStateOf(
+//            mapOf(
+//                "ruby" to true,
+//                "selin" to true,
+//                "sean" to true,
+//                "brown" to true,
+//                "cony" to true
+//            )
+//        )
+//    }
+
+
+    val ccyOptions by spendingAddViewModel.ccyOptions.collectAsState()
+//    val ccyOptions = remember {
+//        mutableStateOf(
+//            mapOf(
+//                "日幣" to "JPY",
+//                "台幣" to "TWD"
+//            )
+//        )
+//    }
 
 //    var ccyOptions = listOf(
 //        "日幣",
 //        "台幣"
 //    )
 
-
-    val ccyOptions = remember {
-        mutableStateOf(
-            mapOf(
-                "日幣" to "JPY",
-                "台幣" to "TWD"
-            )
-        )
-    }
-
-
-    var payByOptions = listOf(
-        "Rubyyyyyer",
-        "Sean",
-        "Selin",
-        "Brown",
-        "Cony"
-    )
-
-    var selectedClassimg: String? by remember { mutableStateOf(null) }
+    val payByOptions by spendingAddViewModel.payByOptions.collectAsState()
+//    var payByOptions = listOf(
+//        "Rubyyyyyer",
+//        "Sean",
+//        "Selin",
+//        "Brown",
+//        "Cony"
+//    )
 
 
 //    var cbCrew by remember { mutableStateOf(false) }
@@ -227,12 +266,12 @@ fun SpendingAddScreen(
             // money input
             Column(
                 modifier = Modifier
-                    .padding(32.dp, 20.dp),
-            ) {
-                // Drop-down currency
+                    .padding(20.dp, 20.dp),
+            ) {  // Drop-down currency
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                    verticalAlignment = Alignment.CenterVertically,
+
+                    ) {
                     Text(
                         text = "支出金額 ",
                         fontSize = 18.sp,
@@ -248,13 +287,15 @@ fun SpendingAddScreen(
                         colors = ButtonDefaults.buttonColors(
                             contentColor = purple300, containerColor = Color.Transparent
                         ),
-                        modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp)
+                        modifier = Modifier
+                            .padding(8.dp, 0.dp, 0.dp, 0.dp)
+
 
                     ) {
                         Text(
                             text = ccySelected,
                             color = purple300,
-                            fontSize = 15.sp
+                            fontSize = 16.sp
                         )
                         Image(
                             painter = painterResource(R.drawable.ic_popselect),
@@ -264,52 +305,120 @@ fun SpendingAddScreen(
                                 .padding(8.dp, 0.dp, 0.dp, 0.dp)
                         )
                     }
+
                     Box(
                         modifier = Modifier
-                            .padding(68.dp, 52.dp, 0.dp, 0.dp)
+                            .offset(x = 50.dp, y = (0).dp)
                     ) {
-                        DropdownMenu(
-                            expanded = ccyExpanded,
-                            onDismissRequest = { ccyExpanded = false },
+                        Row(
                             modifier = Modifier
-                                .width(160.dp)
-                                .padding(20.dp, 0.dp),
-                            containerColor = white100,
-                            border = BorderStroke(1.dp, white200)
-
+                                .padding(8.dp, 52.dp, 0.dp, 0.dp)
                         ) {
-                            ccyOptions.value.forEach { (option: String, text: String) ->
-                                Column(
-                                    verticalArrangement = Arrangement.Center,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .height(56.dp)
-                                        .clickable {
-                                            ccySelected = option
-                                            inputCurrent = text
+                            DropdownMenu(
+                                expanded = ccyExpanded,
+                                onDismissRequest = { ccyExpanded = false },
+                                modifier = Modifier
+                                    .width(160.dp)
+                                    .padding(20.dp, 0.dp),
+                                containerColor = white100,
+                                border = BorderStroke(1.dp, white200)
+
+                            ) {
+
+                                ccyOptions.forEach {
+                                    Column(
+                                        verticalArrangement = Arrangement.Center,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .height(56.dp)
+                                            .clickable {
+                                                ccyExpanded = false
+//                                            ccySelected = option
+
+                                                spendingAddViewModel.updateccySelected(it.value)
+                                                spendingAddViewModel.updateInputCurrent(it.value)
+
+//                                            inputCurrent = text
+//                                            spendingAddViewModel.updateInputCurrent(it.key)
 //                                            Toast
 //                                                .makeText(context, text, Toast.LENGTH_SHORT)
 //                                                .show()
-                                            ccyExpanded = false
 
-                                        }
-                                ) {
-                                    Text(text = option,
-                                        fontSize = 15.sp)
 
+                                            }
+                                    ) {
+                                        Text(
+                                            text = it.key,
+                                            fontSize = 15.sp
+                                        )
+
+                                    }
                                 }
                             }
                         }
                     }
+
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(
+                            modifier = Modifier
+                                .weight(5f, false),
                             onClick = {
-//                                showDatePickerDialog = true
+                                spendingDeleteBtn()
+                                Toast.makeText(context, "刪除成功", Toast.LENGTH_SHORT).show()
+
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = white100,
+                                contentColor = purple300
+                            ),
+                            border = BorderStroke(
+                                2.dp, color = red100,
+                            )
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_delete),
+                                contentDescription = "more",
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Button(
+                            onClick = {
+
+                                val stringToInt =
+                                    classNametoString.entries.associate { (key, value) -> value to key }
+                                val selectedClass = stringToInt[selectedClassimg]?.toInt() ?: -1
+
                                 saveButtonClick()
-                                Toast.makeText(context, "儲存", Toast.LENGTH_SHORT).show()
+                                scope.launch {
+                                    if (costNo == -1) {
+                                        // 新增
+                                    } else {
+                                        //修改
+                                    }
+                                    spendingAddViewModel.saveOneTripsSpending(
+                                        schNo = schNo,
+                                        costType = selectedClass, // byte to String 老師對不起！
+                                        costItem = itemName,
+                                        costPrice = moneyInput.toDouble(),
+                                        paidByNo = payByOptions.getValue(payBySelect),
+                                        paidByName = payBySelect,
+                                        crCostTime = costTime,
+                                        crCur = ccySelected,
+                                        crCurRecord = ccySelected,
+                                    )
+                                }
+
+
+
+
+
+
+                                Toast.makeText(context, "儲存成功", Toast.LENGTH_SHORT).show()
 
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -319,7 +428,7 @@ fun SpendingAddScreen(
                             border = BorderStroke(
                                 2.dp, purple400,
                             ),
-                            modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
+                            modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp)
                         ) {
                             Text(
                                 text = "儲存",
@@ -328,9 +437,15 @@ fun SpendingAddScreen(
 
                         }
 
+
                     }
 
                 }
+            }
+            Column(
+                modifier = Modifier
+                    .padding(32.dp, 20.dp),
+            ) {
 
 
                 // spending money input
@@ -361,7 +476,7 @@ fun SpendingAddScreen(
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Number
                                 ),
-                                onValueChange = { moneyInput = it },
+                                onValueChange = spendingAddViewModel::updateＭoneyInput,
                                 label = {
                                     Text(
                                         text = "請輸入金額",
@@ -429,10 +544,11 @@ fun SpendingAddScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(0.dp, 4.dp)
                         .weight(1f)
                 ) {
                     Text(
-                        text = "付款人", fontSize = 15.sp
+                        text = "付款人", fontSize = 16.sp
                     )
                     Text(
                         text = payBySelect,
@@ -465,7 +581,7 @@ fun SpendingAddScreen(
                     onDismissRequest = { payByExpanded = false },
                     modifier = Modifier
                         .width(340.dp)
-                        .padding(24.dp,0.dp,0.dp, 0.dp),
+                        .padding(24.dp, 0.dp, 0.dp, 0.dp),
                     containerColor = white100,
                     border = BorderStroke(1.dp, white200)
 
@@ -479,17 +595,17 @@ fun SpendingAddScreen(
                                 .height(60.dp)
                                 .clickable {
                                     payByExpanded = false
-                                    payBySelect = it
-//                                    Toast
-//                                        .makeText(context, it, Toast.LENGTH_SHORT)
-//                                        .show()
+                                    spendingAddViewModel.updatePayBySelect(it.key)
+//                                    spendingAddViewModel.updateInputCurrent(it.value.toString())
                                 }
                         ) {
-                            Text(text = it,
-                                fontSize = 16.sp,
+                            Text(
+                                text = it.key,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = purple300,
-                                modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp))
+                                modifier = Modifier.padding(8.dp, 0.dp, 0.dp, 0.dp)
+                            )
                         }
                     }
                 }
@@ -569,7 +685,7 @@ fun SpendingAddScreen(
 // test End --------------------------------------------------
 // 食物 Start --------------------------------------------------
                 if (selectedClassimg == "食物") {
-                    selectedClassname = "食物"
+                    spendingAddViewModel.updateSelectedClassname("食物")
                     Image(painter = painterResource(R.drawable.ic_cat_food_s),
                         contentDescription = "food",
                         modifier = Modifier
@@ -578,12 +694,13 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = null
-                                Toast
-                                    .makeText(context, "食物", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 關食物")
+//                                Toast
+//                                    .makeText(context, "食物", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 } else {
-                    selectedClassname = ""
+                    spendingAddViewModel.updateSelectedClassname("")
                     Image(painter = painterResource(R.drawable.ic_cat_food),
                         contentDescription = "food",
                         modifier = Modifier
@@ -592,15 +709,16 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = "食物"
-                                Toast
-                                    .makeText(context, "食物", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 開食物")
+//                                Toast
+//                                    .makeText(context, "食物", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 }
 // 食物 End --------------------------------------------------
 // 交通 Start --------------------------------------------------
                 if (selectedClassimg == "交通") {
-                    selectedClassname = "交通"
+                    spendingAddViewModel.updateSelectedClassname("交通")
                     Image(painter = painterResource(R.drawable.ic_cat_tfc_s),
                         contentDescription = "tfc",
                         modifier = Modifier
@@ -609,12 +727,13 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = null
-                                Toast
-                                    .makeText(context, "交通", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 關交通")
+//                                Toast
+//                                    .makeText(context, "交通", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 } else {
-                    selectedClassname = ""
+                    spendingAddViewModel.updateSelectedClassname("")
                     Image(painter = painterResource(R.drawable.ic_cat_tfc),
                         contentDescription = "tfc",
                         modifier = Modifier
@@ -623,9 +742,11 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = "交通"
-                                Toast
-                                    .makeText(context, "交通", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 開交通")
+
+//                                Toast
+//                                    .makeText(context, "交通", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 }
 
@@ -633,7 +754,7 @@ fun SpendingAddScreen(
 // 交通 End --------------------------------------------------
 // 交通 Start --------------------------------------------------
                 if (selectedClassimg == "票券") {
-                    selectedClassname = "票券"
+                    spendingAddViewModel.updateSelectedClassname("票券")
                     Image(painter = painterResource(R.drawable.ic_cat_tix_s),
                         contentDescription = "tix",
                         modifier = Modifier
@@ -642,12 +763,14 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = null
-                                Toast
-                                    .makeText(context, "票券", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 關票券")
+
+//                                Toast
+//                                    .makeText(context, "票券", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 } else {
-                    selectedClassname = ""
+                    spendingAddViewModel.updateSelectedClassname("")
                     Image(painter = painterResource(R.drawable.ic_cat_tix),
                         contentDescription = "tix",
                         modifier = Modifier
@@ -656,9 +779,11 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = "票券"
-                                Toast
-                                    .makeText(context, "票券", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 開票券")
+
+//                                Toast
+//                                    .makeText(context, "票券", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 }
 
@@ -666,7 +791,7 @@ fun SpendingAddScreen(
 // 交通 End --------------------------------------------------
 // 住宿 Start --------------------------------------------------
                 if (selectedClassimg == "住宿") {
-                    selectedClassname = "住宿"
+                    spendingAddViewModel.updateSelectedClassname("住宿")
                     Image(painter = painterResource(R.drawable.ic_cat_hotel_s),
                         contentDescription = "hotel",
                         modifier = Modifier
@@ -675,12 +800,14 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = null
-                                Toast
-                                    .makeText(context, "住宿", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 關住宿")
+
+//                                Toast
+//                                    .makeText(context, "住宿", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 } else {
-                    selectedClassname = ""
+                    spendingAddViewModel.updateSelectedClassname("")
                     Image(painter = painterResource(R.drawable.ic_cat_hotel),
                         contentDescription = "hotel",
                         modifier = Modifier
@@ -689,16 +816,18 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = "住宿"
-                                Toast
-                                    .makeText(context, "住宿", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 開住宿")
+
+//                                Toast
+//                                    .makeText(context, "住宿", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 }
 
 // 住宿 End --------------------------------------------------
 // 購物 Start --------------------------------------------------
                 if (selectedClassimg == "購物") {
-                    selectedClassname = "購物"
+                    spendingAddViewModel.updateSelectedClassname("購物")
                     Image(painter = painterResource(R.drawable.ic_cat_shop_s),
                         contentDescription = "shopping",
                         modifier = Modifier
@@ -707,12 +836,14 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = null
-                                Toast
-                                    .makeText(context, "購物", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 關購物")
+
+//                                Toast
+//                                    .makeText(context, "購物", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 } else {
-                    selectedClassname = ""
+                    spendingAddViewModel.updateSelectedClassname("")
                     Image(painter = painterResource(R.drawable.ic_cat_shop),
                         contentDescription = "shopping",
                         modifier = Modifier
@@ -721,16 +852,18 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = "購物"
-                                Toast
-                                    .makeText(context, "購物", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 開購物")
+
+//                                Toast
+//                                    .makeText(context, "購物", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 }
 
 // 購物 End --------------------------------------------------
 // 娛樂 Start --------------------------------------------------
                 if (selectedClassimg == "娛樂") {
-                    selectedClassname = "娛樂"
+                    spendingAddViewModel.updateSelectedClassname("娛樂")
                     Image(painter = painterResource(R.drawable.ic_cat_ent_s),
                         contentDescription = "entertainment",
                         modifier = Modifier
@@ -739,12 +872,14 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = null
-                                Toast
-                                    .makeText(context, "娛樂", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 關娛樂")
+
+//                                Toast
+//                                    .makeText(context, "娛樂", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 } else {
-                    selectedClassname = ""
+                    spendingAddViewModel.updateSelectedClassname("")
                     Image(painter = painterResource(R.drawable.ic_cat_ent),
                         contentDescription = "entertainment",
                         modifier = Modifier
@@ -753,16 +888,18 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = "娛樂"
-                                Toast
-                                    .makeText(context, "娛樂", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 開娛樂")
+
+//                                Toast
+//                                    .makeText(context, "娛樂", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 }
 
 // 娛樂 End --------------------------------------------------
 // 其他 Start --------------------------------------------------
                 if (selectedClassimg == "其他") {
-                    selectedClassname = "其他"
+                    spendingAddViewModel.updateSelectedClassname("其他")
                     Image(painter = painterResource(R.drawable.ic_cat_other_s),
                         contentDescription = "other",
                         modifier = Modifier
@@ -771,12 +908,14 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = null
-                                Toast
-                                    .makeText(context, "其他", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 關其他")
+
+//                                Toast
+//                                    .makeText(context, "其他", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 } else {
-                    selectedClassname = ""
+                    spendingAddViewModel.updateSelectedClassname("")
                     Image(painter = painterResource(R.drawable.ic_cat_other),
                         contentDescription = "other",
                         modifier = Modifier
@@ -785,9 +924,10 @@ fun SpendingAddScreen(
                             .clip(CircleShape)
                             .clickable {
                                 selectedClassimg = "其他"
-                                Toast
-                                    .makeText(context, "其他", Toast.LENGTH_SHORT)
-                                    .show()
+                                Log.d(TAG, "selectedClass: 開其他")
+//                                Toast
+//                                    .makeText(context, "其他", Toast.LENGTH_SHORT)
+//                                    .show()
                             })
                 }
 
@@ -798,7 +938,7 @@ fun SpendingAddScreen(
             // item name
             TextField(
                 value = itemName,
-                onValueChange = { itemName = it },
+                onValueChange = spendingAddViewModel::updateItemName,
                 label = {
                     Text(
                         text = "名稱", color = black900, fontSize = 18.sp
@@ -816,7 +956,7 @@ fun SpendingAddScreen(
 
                 singleLine = true,
                 textStyle = TextStyle(
-                    fontSize = 16.sp
+                    fontSize = 17.sp
                 ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = white100,
@@ -830,7 +970,7 @@ fun SpendingAddScreen(
             TextField(
                 modifier = Modifier
                     .clickable {
-                        Log.d("TAG", "SpendingAddScreen: $spendTime ")
+                        Log.d(TAG, "costTime: $costTime ")
                         showDatePickerDialog = true
 //                        Toast.makeText(context, "日期選擇器", Toast.LENGTH_SHORT)
                     }
@@ -838,8 +978,8 @@ fun SpendingAddScreen(
                     .padding(0.dp, 20.dp, 0.dp, 0.dp),
 
 
-                value = spendTime,
-                onValueChange = { spendTime = it },
+                value = costTime,
+                onValueChange = { spendingAddViewModel.updateCostTime(it) },
                 label = {
                     Text(
                         text = "時間",
@@ -847,7 +987,7 @@ fun SpendingAddScreen(
                         fontSize = 16.sp,
                         modifier = Modifier
                             .clickable {
-                                Log.d("TAG", "SpendingAddScreen: $spendTime ")
+                                Log.d(TAG, "costTime: $costTime ")
                                 showDatePickerDialog = true
 //                        Toast.makeText(context, "日期選擇器", Toast.LENGTH_SHORT)
                             },
@@ -859,7 +999,7 @@ fun SpendingAddScreen(
                         modifier = Modifier
                             .padding(52.dp, 0.dp, 0.dp, 0.dp)
                             .clickable {
-                                Log.d("TAG", "SpendingAddScreen: $spendTime ")
+                                Log.d(TAG, "costTime: $costTime ")
                                 showDatePickerDialog = true
 //                        Toast.makeText(context, "日期選擇器", Toast.LENGTH_SHORT)
                             },
@@ -869,7 +1009,7 @@ fun SpendingAddScreen(
 
                 singleLine = true,
                 textStyle = TextStyle(
-                    fontSize = 20.sp
+                    fontSize = 17.sp
                 ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = white100,
@@ -887,12 +1027,12 @@ fun SpendingAddScreen(
             if (showDatePickerDialog) {
                 MyDatePickerDialog(
                     onDismissRequest = {
-                        spendTime = "Clicking outside or pressing the back button."
+                        spendingAddViewModel.updateInputCurrent("Clicking outside or pressing the back button.")
                         showDatePickerDialog = false
                     },
                     // 確定時會接收到選取日期
                     onConfirm = { utcTimeMillis ->
-//                        spendTime = "Selected date: ${
+//                        costTime = "Selected date: ${
 //                            utcTimeMillis?.let {
 //                                Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
 //                                    .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
@@ -900,19 +1040,27 @@ fun SpendingAddScreen(
 //                        }"
 
 
-                        spendTime = "${
-                            utcTimeMillis?.let {
-                                Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
-                                    .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
-                            } ?: ""
-                        }"
+//                        costTime = "${
+//                            utcTimeMillis?.let {
+//                                Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
+//                                    .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
+//                            } ?: ""
+//                        }"
+
+                        val formattedDate = utcTimeMillis?.let {
+                            Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC"))
+                                .toLocalDate().format(ofLocalizedDate(FormatStyle.MEDIUM))
+                        } ?: ""
+
+                        spendingAddViewModel.updateCostTime(formattedDate) // 將格式化後的日期傳給 ViewModel
+                        showDatePickerDialog = false
 
 
                         showDatePickerDialog = false
                     },
                     // 設定取消時欲執行內容
                     onDismiss = {
-//                        spendTime = "Cancelled"
+//                        costTime = "Cancelled"
                         showDatePickerDialog = false
                     }
                 )
@@ -949,32 +1097,26 @@ fun SpendingAddScreen(
                         ) {
                             Switch(
                                 checked = swSplit,
-                                onCheckedChange = {
-                                    swSplit = it
-                                    if (swSplit) {
-                                        txSplitMethod = "（均分）"
-                                        chmember.value.forEach { name, isChecked ->
-                                            chmember.value = chmember.value.toMutableMap().apply {
-                                                this[name] = true
-                                            }
-                                        }
-
-                                    } else {
-                                        txSplitMethod = "（公費支出）"
-                                        chmember.value.forEach { name, isChecked ->
-                                            chmember.value = chmember.value.toMutableMap().apply {
-                                                this[name] = false
-                                            }
-                                        }
-                                    }
-                                },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = white100,
                                     checkedTrackColor = purple100,
                                     uncheckedThumbColor = white100,
                                     uncheckedTrackColor = black300,
                                     uncheckedBorderColor = Color.Transparent,
-                                )
+                                ),
+                                onCheckedChange = {
+                                    swSplit = it
+                                    Log.d(TAG, "swSplit:${swSplit} ")
+                                    spendingAddViewModel.updateonAllCheckedChanged(it)
+
+                                    if (swSplit == true) {
+                                        txSplitMethod = "（全選）"
+
+
+                                    } else {
+                                        txSplitMethod = "（取消）"
+                                    }
+                                },
                             )
                         }
                     }
@@ -986,7 +1128,7 @@ fun SpendingAddScreen(
                     .padding(20.dp, 0.dp)
                     .fillMaxWidth()
             ) {
-                checkBoxMemberList(chmember, floatingButtonSaveClick)
+                checkBoxMemberList(spendingAddViewModel, chmember, floatingButtonSaveClick)
             }
         }
     }
@@ -1015,10 +1157,11 @@ fun SpendingAddScreen(
 
 @Composable
 private fun checkBoxMemberList(
-    chmember: MutableState<Map<String, Boolean>>,
+    viewModel: SpendingAddViewModel,
+    chmember: Map<String, Boolean>,
     floatingButtonSaveClick: () -> Unit = {},
 ) {
-    chmember.value.forEach { (name, isChecked) ->
+    chmember.forEach { (name, isChecked) ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -1045,11 +1188,7 @@ private fun checkBoxMemberList(
                 Checkbox(
                     checked = isChecked,
                     onCheckedChange = {
-
-                        chmember.value = chmember.value.toMutableMap().apply {
-                            this[name] = it
-                            Log.d("TAG_check", "test2$name : $it ")
-                        }
+                        viewModel.updateOnMemberChecked(name, it)
                     }, colors = CheckboxDefaults.colors(
                         uncheckedColor = black300,
                         checkedColor = purple300,
