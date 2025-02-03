@@ -3,14 +3,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tripapp.ui.feature.spending.CrewRecord
 import com.example.tripapp.ui.feature.spending.SpendingRecord
-import com.example.tripapp.ui.feature.trip.dataObjects.Plan
 import com.ron.restdemo.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SpendingListViewModel:ViewModel(){
+class SpendingListViewModel : ViewModel() {
+
+    private val TAG = SpendingListViewModel::class.java.simpleName
+
+    // 顯示結算列表
+    private val _settleExpanded = MutableStateFlow(false)
+    val settleExpanded = _settleExpanded.asStateFlow()
+
+
     // 2 定義屬性
     // 找到一筆資料
     private var _spendingOneListInfo =
@@ -21,6 +28,9 @@ class SpendingListViewModel:ViewModel(){
     private val _tripName = MutableStateFlow<List<CrewRecord>?>(listOf())
     val tripName = _tripName.asStateFlow()
 
+    //付款人--旅伴（選項）
+    private val _payByOptions = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val payByOptions = _payByOptions.asStateFlow()
 
 //    init {
 //        viewModelScope.launch {
@@ -29,23 +39,31 @@ class SpendingListViewModel:ViewModel(){
 //    }
 
 
-    //3 取得資料
+    //3 根據清單編號取得單筆資料
     fun GetData(costNo: Int) {
         viewModelScope.launch {
             _spendingOneListInfo.update { getOne(costNo) }
         }
     }
 
-
-    fun getTripName(memNo:Int){
+    //3 根據會員編號找到旅行名稱
+    fun getTripName(memNo: Int) {
         viewModelScope.launch {
             _tripName.update { findTripName(memNo) }
         }
+    }
 
+    fun setSettleExpanded(expanded: Boolean) {
+        _settleExpanded.value = expanded
     }
 
 
-/** 取得一筆Plan */
+//    fun getsettleExpanded(){
+//   _settleExpanded.value = !_settleExpanded.value
+//    }
+
+
+    /** 取得一筆Plan */
 //suspend fun getOne(costNo: Int): List<SpendingRecord>? {
 //    val tag = "tag_OneSpendingListViewModel"
 //    try {
@@ -60,16 +78,16 @@ class SpendingListViewModel:ViewModel(){
 
 
 //取得單筆消費明細
-suspend fun getOne(costNo: Int): SpendingRecord? {
-    try {
-        val response = RetrofitInstance.api.getOneSpendingList(costNo)
-        Log.d("tagaaa", "data: ${response}")
-        return response
-    } catch (e: Exception) {
-        Log.e("tagaaa", "error: ${e.message}")
-        return null
+    suspend fun getOne(costNo: Int): SpendingRecord? {
+        try {
+            val response = RetrofitInstance.api.getOneSpendingList(costNo)
+            Log.d("tagaaa", "data: ${response}")
+            return response
+        } catch (e: Exception) {
+            Log.e("tagaaa", "error: ${e.message}")
+            return null
+        }
     }
-}
 
 
     suspend fun GetPlan(memNo: Int): SpendingRecord? {
@@ -83,18 +101,17 @@ suspend fun getOne(costNo: Int): SpendingRecord? {
         }
     }
 
-suspend fun findTripName(memNo:Int):List<CrewRecord>? {
-    try {
-        Log.d("TAGCCC", "有沒有進來")
-        val response = RetrofitInstance.api.findTripName(memNo)
-        Log.d("TAGCCC", "findTripName:$response ")
-        return response
-    }catch (e: Exception){
-        Log.d("TAGCCC", "Exception:$e ")
-        return null
+    suspend fun findTripName(memNo: Int): List<CrewRecord>? {
+        try {
+            Log.d("TAGCCC", "有沒有進來")
+            val response = RetrofitInstance.api.findTripName(memNo)
+            Log.d("TAGCCC", "findTripName:$response ")
+            return response
+        } catch (e: Exception) {
+            Log.d("TAGCCC", "Exception:$e ")
+            return null
+        }
     }
-}
-
 
 }
 

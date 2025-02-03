@@ -3,6 +3,7 @@ package com.example.tripapp.ui.feature.spending
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tripapp.ui.feature.member.MemberRepository
 import com.example.tripapp.ui.feature.trip.dataObjects.Destination
 import com.example.tripapp.ui.feature.trip.dataObjects.Plan
 import com.ron.restdemo.RetrofitInstance
@@ -13,13 +14,15 @@ import kotlinx.coroutines.launch
 
 class SpendingRecordVM : ViewModel() {
     val TAG = "TAG---SpendingRecordVM---"
-    private val
-            tag = SpendingRecordVM::class.java.simpleName
+    private val tag = SpendingRecordVM::class.java.simpleName
 
     //初始化 listof() 空的list:
     private val _plan = MutableStateFlow<List<Plan>>(listOf())
     val plan = _plan.asStateFlow()
 
+    // 金額加總
+    private val _totalSumStatus = MutableStateFlow<List<TotalSum>?>(listOf())
+    val totalSumStatus = _totalSumStatus.asStateFlow()
 
 
     // Pair<schNo, List<SpendingRecord>>
@@ -37,6 +40,19 @@ class SpendingRecordVM : ViewModel() {
     val tabTripListSelectedList = _tabsTripListSelectedList.asStateFlow()
 
 
+    //用行程算總金額
+    // 顯示特定行程的消費明細
+    private var _totalCost = MutableStateFlow(0)
+    val totalCost = _totalCost.asStateFlow()
+
+    //平均金額
+    private val _averageCost = MutableStateFlow(0)
+    val averageCost = _averageCost.asStateFlow()
+
+    val memberNum = MemberRepository.getUid()
+
+
+
 //    變數VM寫法
 //    private val _title = MutableStateFlow<String?>(null)
 //    val title = _title.asStateFlow()
@@ -49,7 +65,8 @@ class SpendingRecordVM : ViewModel() {
 
     init {
         viewModelScope.launch {
-            val spending = getSpendingList(1)
+            //要改會員編號
+            val spending = getSpendingList(memberNum)
             Log.d(TAG, "spendingAAAAA" + spending)
             // 用 schNo 分類，變成是 Pair<SchNo,消費明細>，才能區別每個 Tab 代表的 schNo
             val topicSpending = spending.groupBy { it.schNo }.toList()
@@ -57,6 +74,24 @@ class SpendingRecordVM : ViewModel() {
             _spendingListInfo.value = topicSpending
             // 分類完之後，將第一個列表當作預設顯示的資料
             _tabsTripListSelectedList.update { topicSpending.firstOrNull() }
+
+
+            //加總算錢
+            val spendingData = topicSpending.flatMap { (schNo, price) ->
+                price.map { spending ->
+                    Pair(schNo, spending.costPrice)
+                }
+            }
+//            val schNotest = spendingData.first()
+//            val spendingBySchNo = spendingData.groupBy { it.first }
+            val totalCost = spendingData
+                .filter { it.first == 1 }
+                .sumOf { it.second }
+            Log.d(TAG, "spendingData: $totalCost")
+
+            _totalCost.update { totalCost.toInt() }
+
+
         }
     }
 
@@ -83,7 +118,8 @@ class SpendingRecordVM : ViewModel() {
     }
 
     /** 取得所有資料 */
-    suspend fun getSpendingList(memNo:Int): List<SpendingRecord> {try {
+    suspend fun getSpendingList(memNo: Int): List<SpendingRecord> {
+        try {
             val response = RetrofitInstance.api.getSpendingList(memNo)
             Log.d(tag, "getSpendingList data: ${response}")
             return response
@@ -106,7 +142,7 @@ class SpendingRecordVM : ViewModel() {
 //    }
 
 
-  /** 新增一筆資料 */
+    /** 新增一筆資料 */
 //    suspend fun addSpendingList(costNo: Int):List<SpendingRecord>{
 //        try {
 //            val response = RetrofitInstance.api.getOneSpendingList(costNo)
@@ -119,23 +155,63 @@ class SpendingRecordVM : ViewModel() {
 //    }
 
 
-
-
-
     // 點 tab 的反應，才能知道是哪個 Tab 亮起，跟要換哪個行程跟消費明細
     fun onTabChanged(changeIndex: Int) {
         _tabsTripListSelectedIndex.update { changeIndex }
         val selectedSchNo = spendingListInfo.value.getOrNull(changeIndex)
-      Log.d(TAG, "spendingListInfo: $spendingListInfo")
+        Log.d(TAG, "spendingListInfo: $spendingListInfo")
         _tabsTripListSelectedList.update { selectedSchNo }
     }
 
 
+    fun tripCrew(schNo: Int) {
+        viewModelScope.launch {
+            // 取得此行程的所有參與者
+            val response = RetrofitInstance.api.findTripCrew(schNo) ?: emptyList()
+            Log.d(TAG, "test旅伴名字: ${response}")
+
+            // 此行程的參與者人數
+            val peopleCount = response.size
+
+            // 此行程的所有花費
+            // 例如： 100 + 100 + 200 = 500
+            val totalCost: Int =
+                (_tabsTripListSelectedList.value?.second?.sumOf { it.costPrice })?.toInt() ?: 0
+            _totalCost.update { totalCost }
+
+            // 此行程的平均花費
+            // 例如： 500 / 2 = 250
+            val average = totalCost / peopleCount
+            _averageCost.update { average }
 
 
+            // 此行程依照人名，將所有消費分組
+            // 例如： A: {100,100,100}, B: {200}
+            val data = _tabsTripListSelectedList.value?.second?.groupBy { it.paidByName }
 
 
+            // 依照人名，將所有消費加總
+            // 例如： A: 300, B: 200
+            val result = data?.map { it.key to it.value.sumOf { it.costPrice } }
 
+
+            // 依照人名，將各自消費減去平均花費，等於此人應付或應收
+            // 例如： A: 300 - 250 = 50, B: 200 - 250 = -50
+            val totalSum =
+                response.map { crewRecord ->
+                    crewRecord.memName to ((result?.find { it.first == crewRecord.memName }?.second
+                        ?: 0).toInt() - average)
+                }
+
+            // 只是將上面的結果轉成，要呈現在UI的格式
+            val totalSumUiState =
+                totalSum.map { TotalSum(userName = it.first, totalSum = it.second.toString()) }
+            _totalSumStatus.update { totalSumUiState }
+
+
+        }
+
+    }
 
 
 //可以參考彬華老師的檔案來寫。
@@ -236,12 +312,6 @@ class SpendingRecordVM : ViewModel() {
 //        )
 //
 //    }
-
-
-
-
-
-
 
 
 }

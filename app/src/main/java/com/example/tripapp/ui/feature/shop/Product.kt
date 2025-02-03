@@ -8,16 +8,35 @@ data class Product(
     var prodDesc: String = "",
     var prodPrice: Int = 0,
     var prodSta: Boolean = false,
-//    var prodPic: ByteArray = byteArrayOf()
-//    var prodPic: Int = R.drawable.ic_launcher_foreground,
     var prodPic: String = ""
 ) {
-
     override fun equals(other: Any?): Boolean {
-        return this.prodName == (other as Product).prodName
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        other as Product
+        return prodNo == other.prodNo &&
+                prodName == other.prodName &&
+                prodDesc == other.prodDesc &&
+                prodPrice == other.prodPrice &&
+                prodSta == other.prodSta &&
+                prodPic == other.prodPic
     }
 
     override fun hashCode(): Int {
-        return prodName.hashCode()
+        return 31 * prodNo.hashCode() +
+                prodName.hashCode() +
+                prodDesc.hashCode() +
+                prodPrice.hashCode() +
+                prodSta.hashCode() +
+                prodPic.hashCode()
     }
 }
+
+//    override fun equals(other: Any?): Boolean {
+//        return this.prodName == (other as Product).prodName
+//    }
+//
+//    override fun hashCode(): Int {
+//        return prodName.hashCode()
+//    }
+//}

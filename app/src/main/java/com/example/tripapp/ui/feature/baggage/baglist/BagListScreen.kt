@@ -14,6 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.tripapp.R
 import com.example.tripapp.ui.feature.baggage.BagItems
+import com.example.tripapp.ui.feature.baggage.BagList
 import com.example.tripapp.ui.feature.member.GetUid
 import com.example.tripapp.ui.feature.member.MemberRepository
 import kotlinx.coroutines.launch
@@ -73,6 +77,10 @@ fun BagListScreen(
         if (userTrips.isNotEmpty() && schNo != null && isNeedDefaultSelected) {
             bagViewModel.onDefaultSelected(memNo, schNo)
         }
+    }
+
+    LaunchedEffect(Unit) {
+        bagViewModel.fetchTrips()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -145,8 +153,8 @@ fun BagListScreen(
                 modifier = Modifier
                     .size(210.dp)
                     .border(
-                        width = 6.dp,
-                        color = colorResource(id = R.color.green_200),
+                        width = 1.dp,
+                        color = colorResource(id = R.color.purple_200),
                         shape = RoundedCornerShape(50)
                     )
                     .background(
@@ -176,8 +184,14 @@ fun BagListScreen(
                     contentDescription = "suitcase Icon",
                     modifier = Modifier
                         .fillMaxSize()
-                        .align(Center),
-                    colorFilter = ColorFilter.tint(colorResource(id = R.color.purple_300))
+                        .align(Center)
+                        .padding(8.dp)
+                        .border(
+                            width = 6.dp,
+                            color = colorResource(id = R.color.white_100),
+                            shape = RoundedCornerShape(50)
+                        ),
+                    colorFilter = ColorFilter.tint(colorResource(id = R.color.purple_200))
                 )
             }
 
@@ -196,11 +210,11 @@ fun BagListScreen(
                 },
                 modifier = Modifier
                     .width(280.dp)
-                    .height(74.dp)
+                    .height(65.dp)
                     .align(Alignment.CenterHorizontally)
             )
 //            下拉式選單跟物品清單之間的空白區塊
-            Spacer(modifier = Modifier.height(4.dp))
+//            Spacer(modifier = Modifier.height(4.dp))
             val items by bagViewModel.items.collectAsState()
             val checkedState by bagViewModel.checkedState.collectAsState()
 
@@ -213,8 +227,8 @@ fun BagListScreen(
                 items = items,
                 checkedState = checkedState,
                 isEditing = isEditing,
-                onCheckedChange = { itemNo, isChecked ->
-                    bagViewModel.updateCheckedState(itemNo, isChecked)
+                onCheckedChange = { memNo, itemNo, schNo, check ->
+                    bagViewModel.updateReadyStatus(BagList(memNo, schNo, itemNo, check))
                 },
                 onItemRemoved = { itemNo ->
                     bagViewModel.removeItem(itemNo)
@@ -254,22 +268,22 @@ fun TripPickDropdown(
     Box(
         modifier = modifier
             .background(
-                color = Color(0xFFE8DEF8),
+                color = colorResource(id = R.color.white_200),
                 shape = RoundedCornerShape(
-                    topStart = 12.dp,
-                    topEnd = 12.dp,
-                    bottomStart = if (menuExpanded.value) 0.dp else 12.dp,  // 未展開時圓角，展開後下端無圓角
-                    bottomEnd = if (menuExpanded.value) 0.dp else 12.dp      // 未展開時圓角，展開後下端無圓角
+                    topStart = 30.dp,
+                    topEnd = 30.dp,
+                    bottomStart = if (menuExpanded.value) 0.dp else 30.dp,  // 未展開時圓角，展開後下端無圓角
+                    bottomEnd = if (menuExpanded.value) 0.dp else 30.dp      // 未展開時圓角，展開後下端無圓角
                 )
             )
             .border(
                 width = 1.dp,
-                color = Color(0xFF65558F),
+                color = colorResource(id = R.color.purple_200),
                 shape = RoundedCornerShape(
-                    topStart = 12.dp,
-                    topEnd = 12.dp,
-                    bottomStart = if (menuExpanded.value) 0.dp else 12.dp, // 未展開時圓角，展開後下端無圓角
-                    bottomEnd = if (menuExpanded.value) 0.dp else 12.dp// 未展開時圓角，展開後下端無圓角
+                    topStart = 30.dp,
+                    topEnd = 30.dp,
+                    bottomStart = if (menuExpanded.value) 0.dp else 30.dp, // 未展開時圓角，展開後下端無圓角
+                    bottomEnd = if (menuExpanded.value) 0.dp else 30.dp// 未展開時圓角，展開後下端無圓角
                 )
             )
             .clickable { menuExpanded.value = true }
@@ -280,12 +294,12 @@ fun TripPickDropdown(
             horizontalArrangement = Arrangement.SpaceBetween, // 水平方向居中
             modifier = Modifier
 //                .fillMaxSize() // 填滿父容器
-                .padding(horizontal = 12.dp) // 添加適當的水平內邊距
+                .padding(horizontal = 15.dp) // 添加適當的水平內邊距
         ) {
             Icon(
                 imageVector = Icons.Default.DateRange, // 左側圖標
                 contentDescription = "Trip Icon",
-                tint = Color.Black,
+                tint = colorResource(id = R.color.purple_400),
                 modifier = Modifier.size(28.dp)
             )
             Box(
@@ -297,14 +311,14 @@ fun TripPickDropdown(
                 Text(
                     text = selectedOption,
                     fontSize = 18.sp,
-                    color = Color.Black,
+                    color = colorResource(id = R.color.purple_400),
                     maxLines = 1 // 保證文本不換行
                 )
             }
             Icon(
                 painter = painterResource(id = R.drawable.baseline_arrow_drop_down_circle_24), // 右側下拉圖標
                 contentDescription = "Dropdown Icon",
-                tint = Color.Black,
+                tint = colorResource(id = R.color.purple_400),
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -318,7 +332,7 @@ fun TripPickDropdown(
                 .width(280.dp) // 與外層 Box 寬度一致
                 .heightIn(min = 56.dp, max = 224.dp) //預設336,為了測試改成228
                 .background(
-                    color = Color(0xFFE8DEF8),
+                    color = colorResource(id = R.color.white_200),
                     shape = RoundedCornerShape(
                         topStart = 0.dp,
                         topEnd = 0.dp,
@@ -330,7 +344,7 @@ fun TripPickDropdown(
                     )
                 )
                 .border(
-                    1.dp, Color(0xFF65558F),
+                    1.dp, color = colorResource(id = R.color.purple_200),
                     shape = RoundedCornerShape(
                         topStart = 0.dp,
                         topEnd = 0.dp,
@@ -371,7 +385,7 @@ fun TripPickDropdown(
                             Text(
                                 text = option,
                                 fontSize = 18.sp,
-                                color = Color.Black
+                                color = colorResource(id = R.color.purple_100),
                             )
                         }
                     }
@@ -387,7 +401,7 @@ fun ScrollContent(
     items: List<BagItems>,
     checkedState: Map<Int, Boolean>, // 從 ViewModel 提供的勾選狀態
     isEditing: MutableState<Boolean>,
-    onCheckedChange: (Int, Boolean) -> Unit, // 更新勾選狀態的回調
+    onCheckedChange: (Int, Int, Int, Boolean) -> Unit, // 更新勾選狀態的回調
     onItemRemoved: (Int) -> Unit // 刪除操作
 ) {
     Column(
@@ -397,100 +411,112 @@ fun ScrollContent(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 30.dp, end = 30.dp)
+            modifier = Modifier.padding(start = 45.dp, end = 33.dp, top = 4.dp)
         ) {
             Text(
-                text = "物品清單", fontSize = 20.sp, modifier = Modifier.weight(1f)
+                text = "物品清單", fontSize = 20.sp, modifier = Modifier.weight(1f),
+                color = colorResource(id = R.color.purple_300)
             )
-//            IconButton(onClick = {
-//                isEditing.value = !isEditing.value
-//            }) {
-//                Icon(
-//                    imageVector = if (isEditing.value) Icons.Filled.Done else Icons.Filled.Edit,
-//                    contentDescription = if (isEditing.value) "完成編輯" else "編輯"
-//                )
-//            }
+            IconButton(onClick = {
+                isEditing.value = !isEditing.value
+            }) {
+                Icon(
+                    imageVector = if (isEditing.value) Icons.Filled.Done else Icons.Filled.Edit,
+                    contentDescription = if (isEditing.value) "完成編輯" else "編輯",
+                    tint = colorResource(id = R.color.purple_300)
+                )
+            }
         }
 
         // 列表
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             items(items) { bagItem ->
                 // 確保每個 item 的勾選狀態是單獨管理的
-                val isChecked = remember { mutableStateOf(checkedState[bagItem.itemNo] ?: false) }
-
+                val isChecked = checkedState[bagItem.itemNo] ?: false
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start,
+                    horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .border(
                             width = 1.dp,
-                            color = Color(0x8065558F),
+                            color = colorResource(id = R.color.purple_200),
                             shape = RoundedCornerShape(size = 10.dp)
                         )
-                        .width(317.dp)
+                        .width(280.dp)
                         .height(44.dp)
                         .background(
-                            color = Color(0xFFE8DEF8),
+                            color = colorResource(id = R.color.white_100),
                             shape = RoundedCornerShape(size = 10.dp)
                         )
                         .clickable(enabled = !isEditing.value) { // 非編輯狀態才可打勾
-                            val newState = !isChecked.value
-                            isChecked.value = newState
-                            onCheckedChange(bagItem.itemNo, newState) // 更新勾選狀態
+                            onCheckedChange(
+                                bagItem.memNo,
+                                bagItem.itemNo,
+                                bagItem.schNo,
+                                !isChecked
+                            ) // 更新勾選狀態
                         }
-                        .padding(start = 20.dp, top = 10.dp, end = 20.dp, bottom = 10.dp)
+                        .padding(start = 30.dp, top = 10.dp, end = 20.dp, bottom = 10.dp)
                 ) {
+////                    只顯示文字的寫法
+//                    Box(
+//                        modifier = Modifier
+//                            .size(24.dp)
+//                            .weight(1f)
+//                            .fillMaxHeight(), // 確保 Box 填滿可用高度
+//                        contentAlignment = Alignment.Center // 文字置中
+//                    ) {
+//                        Text(
+//                            text = bagItem.itemName
+//                        )
+//                    }
+
+                    // 勾選框
                     Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .weight(1f)
-                            .fillMaxHeight(), // 確保 Box 填滿可用高度
-                        contentAlignment = Alignment.Center // 文字置中
+                        modifier = Modifier.size(40.dp)
                     ) {
-                        Text(
-                            text = bagItem.itemName
-                        )
+                        if (isChecked) {
+                            Image(
+                                modifier = Modifier.size(40.dp),
+                                painter = painterResource(id = R.drawable.baseline_check_circle_24),
+                                contentDescription = "Checked",
+                                colorFilter = ColorFilter.tint(colorResource(id = R.color.purple_200))
+                            )
+                        } else {
+                            Image(
+                                modifier = Modifier.size(40.dp),
+                                painter = painterResource(id = R.drawable.baseline_check_circle_outline_24),
+                                contentDescription = "Unchecked",
+                                colorFilter = ColorFilter.tint(colorResource(id = R.color.black_500))
+                            )
+                        }
                     }
 
-//                    // 勾選框
-//                    Box(
-//                        modifier = Modifier.size(24.dp)
-//                    ) {
-//                        if (isChecked.value) {
-//                            Image(
-//                                painter = painterResource(id = R.drawable.baseline_check_circle_24),
-//                                contentDescription = "Checked",
-//                            )
-//                        } else {
-//                            Image(
-//                                painter = painterResource(id = R.drawable.baseline_check_circle_outline_24),
-//                                contentDescription = "Unchecked"
-//                            )
-//                        }
-//                    }
-//
-//                    Spacer(modifier = Modifier.width(24.dp))
-//                    // 物品名稱
-//                    Text(
-//                        text = bagItem.itemName,
-//                        modifier = Modifier.weight(1f)
-//                    )
-//                    // 刪除按鈕
-//                    if (isEditing.value) {
-//                        IconButton(onClick = {
-//                            // 刪除選項並更新物品列表
-//                            onItemRemoved(bagItem.itemNo) // 傳遞當前項目的 itemNo 給回調
-//                        }) {
-//                            Icon(
-//                                imageVector = Icons.Filled.Delete,
-//                                contentDescription = "刪除"
-//                            )
-//                        }
-//                    }
+                    Spacer(modifier = Modifier.width(30.dp))
+                    // 物品名稱
+                    Text(
+                        text = bagItem.itemName,
+                        modifier = Modifier.weight(1f),
+                        color = colorResource(id = R.color.purple_400),
+                        fontSize = 16.sp
+                    )
+                    // 刪除按鈕
+                    if (isEditing.value) {
+                        IconButton(onClick = {
+                            // 刪除選項並更新物品列表
+                            onItemRemoved(bagItem.itemNo) // 傳遞當前項目的 itemNo 給回調
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "刪除",
+                                tint = colorResource(id = R.color.red_100)
+                            )
+                        }
+                    }
                 }
             }
         }

@@ -14,12 +14,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+//import androidx.compose.material.AlertDialog
+//import androidx.compose.material.Button
+//import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -33,10 +44,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,12 +59,19 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.tripapp.R
+import com.example.tripapp.ui.feature.member.GetUid
+import com.example.tripapp.ui.feature.member.MemberRepository
 import com.example.tripapp.ui.theme.purple100
+import com.example.tripapp.ui.theme.purple200
 import com.example.tripapp.ui.theme.purple300
 import com.example.tripapp.ui.theme.purple400
 import com.example.tripapp.ui.theme.purple500
 import com.example.tripapp.ui.theme.red100
 import com.example.tripapp.ui.theme.red200
+import com.example.tripapp.ui.theme.white100
+import com.example.tripapp.ui.theme.white300
+import com.example.tripapp.ui.theme.white400
+import kotlin.toString
 
 @Composable
 fun ProductListScreen(
@@ -61,7 +82,6 @@ fun ProductListScreen(
     // TabRow顯示與否
     tabVM.updateTabState(true)
 
-//    val memNo = 1
     // 從StateFlow取得最新資料
     val products by productVM.productsState.collectAsState()
     var inputText by remember { mutableStateOf("") }
@@ -103,20 +123,190 @@ fun ProductListScreen(
                 productVM.setDetailProduct(it)
                 Log.d("tag_", "setDetailProduct")
                 navController.navigate(Screen.ProductDetail.name)
-            }
+            },
+            navController,
+            productVM
         )
     }
 }
 
 /**
  * 列表內容
- * @param products 欲顯示的書籍清單
+ * @param products 欲顯示的商品清單
  */
 @Composable
 fun ProductLists(
     products: List<Product>,
     onItemClick: (Product) -> Unit,
+    navController: NavHostController,
+    productVM: ProductVM
 ) {
+    val memberId = GetUid(MemberRepository)
+    var showDialog by remember { mutableStateOf(false) } // 控制對話框的顯示
+    var newProduct by remember { mutableStateOf(Product()) } // 儲存新商品資料
+
+    // 新增商品對話框的狀態
+    var newProdName by remember { mutableStateOf("") }
+    var newProdDesc by remember { mutableStateOf("") }
+    var newProdPrice by remember { mutableStateOf("") }
+    var newProdPic by remember { mutableStateOf("") }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),  // 內邊距
+        horizontalArrangement = Arrangement.SpaceBetween  // 左右分布
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),  // Row 內部的間距
+            horizontalArrangement = Arrangement.SpaceBetween  // 讓按鈕左右分布
+        ) {
+            if (memberId == 3) {
+                Button(
+                    onClick = {
+                        showDialog = true
+                        // 初始化 newProduct
+                        newProduct = Product()
+                        newProdName = ""
+                        newProdDesc = ""
+                        newProdPrice = ""
+                        newProdPic = ""
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = purple200)
+                ) {
+                    Text(text = "新增商品", color = white300)
+                }
+            }
+
+            Button(
+                onClick = {
+                    navController.navigate(Screen.OrderList.createRoute(memberId))                },
+                colors = ButtonDefaults.buttonColors(containerColor = purple200)
+            ) {
+                Text(text = "我的訂單", color = white300)
+            }
+        }
+    }
+
+    // 新增商品對話框
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = {
+                Text(
+                    text = "新增商品",
+                    fontSize = 20.sp
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TextField(
+                        value = newProdName,
+                        onValueChange = {
+                            newProdName = it
+                            Log.d("InputDebug", "商品名稱: $it")
+                        },
+                        label = { Text("商品名稱") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = white400, /* 設定背景顏色 */
+                            focusedIndicatorColor = colorResource(id = R.color.purple_400), // 聚焦時的指示線顏色
+                            unfocusedIndicatorColor = Color.Gray, // 失去焦點時的指示線顏色
+                            textColor = Color.Black // 文字顏色
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextField(
+                        value = newProdDesc,
+                        onValueChange = {
+                            newProdDesc = it
+                            Log.d("InputDebug", "商品描述: $it")
+                        },
+                        label = { Text("商品描述") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = white400, /* 設定背景顏色 */
+                            focusedIndicatorColor = colorResource(id = R.color.purple_400), // 聚焦時的指示線顏色
+                            unfocusedIndicatorColor = Color.Gray, // 失去焦點時的指示線顏色
+                            textColor = Color.Black // 文字顏色
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextField(
+                        value = newProdPrice,
+                        onValueChange = {
+                            newProdPrice = it
+                            Log.d("InputDebug", "商品價格: $it")
+                        },
+                        label = { Text("商品價格") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = white400, /* 設定背景顏色 */
+                            focusedIndicatorColor = colorResource(id = R.color.purple_400), // 聚焦時的指示線顏色
+                            unfocusedIndicatorColor = Color.Gray, // 失去焦點時的指示線顏色
+                            textColor = Color.Black // 文字顏色
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextField(
+                        value = newProdPic,
+                        onValueChange = {
+                            newProdPic = it
+                            Log.d("InputDebug", "商品圖片URL: $it")
+                        },
+                        label = { Text("商品圖片URL") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = white400, /* 設定背景顏色 */
+                            focusedIndicatorColor = colorResource(id = R.color.purple_400), // 聚焦時的指示線顏色
+                            unfocusedIndicatorColor = Color.Gray, // 失去焦點時的指示線顏色
+                            textColor = Color.Black // 文字顏色
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // 呼叫ViewModel的方法提交新商品資料
+                        newProduct = newProduct.copy(
+                            prodName = newProdName,
+                            prodDesc = newProdDesc,
+                            prodPrice = newProdPrice.toIntOrNull() ?: 0,
+                            prodPic = newProdPic
+                        )
+                        productVM.addProduct(newProduct)
+                        Log.d("NewProduct", newProduct.toString())
+                        showDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = purple200)
+                ) {
+                    Text("確定")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = purple200)
+                ) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -133,11 +323,6 @@ fun ProductLists(
                 Column(
                     modifier = Modifier.padding(16.dp)  // Card 內部的內邊距
                 ) {
-//                    // 顯示圖片
-//                    val painter = painterResource(product.prodPic)
-//                    Image(
-//                        painter = painter,
-//                        contentDescription = "product",
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(product.prodPic)  // prodPic 可以是 URL 或 Base64 字符串
@@ -148,7 +333,7 @@ fun ProductLists(
                         contentDescription = "product",
                         modifier = Modifier
                             .fillMaxWidth()  // 圖片佔滿寬度
-                            .height(250.dp), // 設定圖片高度
+                            .height(200.dp), // 設定圖片高度
                         contentScale = ContentScale.Crop
                     )
 
@@ -177,3 +362,5 @@ fun ProductLists(
         }
     }
 }
+
+

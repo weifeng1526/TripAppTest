@@ -3,6 +3,7 @@ package com.example.tripapp.ui.feature.map
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 
@@ -21,19 +22,29 @@ import com.google.android.libraries.places.api.net.FetchPlaceResponse
 import com.google.android.libraries.places.api.net.FetchResolvedPhotoUriRequest
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.api.net.SearchByTextRequest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okio.IOException
+import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.util.Locale
 
 class MapViewModel : ViewModel() {
     private val tag = "tag_MapVM"
-    private val _search = MutableStateFlow("")
-    var search = _search.asStateFlow()
 
     var placesClient: PlacesClient? = null
+
+    private val _isLoading = MutableStateFlow(false)
+    var isLoading = _isLoading.asStateFlow()
+
+    private val _search = MutableStateFlow("")
+    var search = _search.asStateFlow()
 
     private val _checkSearch = MutableStateFlow<String?>(null)
     var checkSearch = _checkSearch.asStateFlow()
@@ -46,15 +57,18 @@ class MapViewModel : ViewModel() {
 
     private val _selectedTripPlace = MutableStateFlow<SelectPlace?>(null)
     var selectedTripPlace = _selectedTripPlace.asStateFlow()
-//提示吐司
+
+    //提示吐司
     private val _toastRequest = MutableStateFlow<String?>(null)
     var toastRequest = _toastRequest.asStateFlow()
 
     //照片相關
     private val _selectedTripPlaceImage = MutableStateFlow<Uri?>(null)
     val selectedTripPlaceImage = _selectedTripPlaceImage.asStateFlow()
-    private val _selectedTripPlaceBit = MutableStateFlow<Bitmap?>(null)
-    val selectedTripPlaceBit = _selectedTripPlaceBit.asStateFlow()
+    private val _selectedTripPlaceByte = MutableStateFlow<ByteArray?>(null)
+    val selectedTripPlaceByte = _selectedTripPlaceByte.asStateFlow()
+//    private val _selectedTripPlaceBit = MutableStateFlow<Bitmap?>(null)
+//    val selectedTripPlaceBit = _selectedTripPlaceBit.asStateFlow()
 
     fun onSearchChange(search: String) {
         _search.update { search }
@@ -77,8 +91,8 @@ class MapViewModel : ViewModel() {
             .setMaxResultCount(1)
             .setLocationRestriction(
                 RectangularBounds.newInstance(
-                    LatLng(22.045858, 119.426224),
-                    LatLng(25.161124, 122.343094)
+                    LatLng(21.9, 119.5),
+                    LatLng(45.4, 145.7)
                 )
             ).build()
         placesClient?.searchByText(searchByTextRequest)
@@ -155,12 +169,14 @@ class MapViewModel : ViewModel() {
         dstStart: String = "00:00:00",
         dstEnd: String = "00:00:00",
         dstInr: String = "00:00:00",
+        dstPic: ByteArray,
 
-    ){
+        ) {
 
 
         viewModelScope.launch {
             try {
+                _isLoading.update { true }
                 var response = MapRetrofit.api.selectPlace(
                     SelectPlaceDetail(
                         schNo = schNo,
@@ -174,11 +190,18 @@ class MapViewModel : ViewModel() {
                         dstDate = dstDate,
                         dstStart = dstStart,
                         dstEnd = dstEnd,
-                        dstInr = dstInr
+                        dstInr = dstInr,
+                        dstPic = dstPic
                     )
                 )
-                Log.d(tag, "地點${poiName},地址${poiAdd},經緯度${poiLng},${poiLat},行程時間${dstDate},${dstStart},${dstEnd},${dstInr}")
-                if (response != null) {_checkSearch.update { "已經加入了" }}
+                _isLoading.update { false }
+                Log.d(
+                    tag,
+                    "地點${poiName},地址${poiAdd},經緯度${poiLng},${poiLat},行程時間${dstDate},${dstStart},${dstEnd},${dstInr}"
+                )
+                if (response != null) {
+                    _checkSearch.update { "已經加入了" }
+                }
             } catch (e: Exception) {
                 Log.e(tag, "error: ${e.message}")
 
@@ -209,6 +232,10 @@ class MapViewModel : ViewModel() {
                 ?.addOnSuccessListener { fetchResolvedPhotoUriResponse ->
                     val uri = fetchResolvedPhotoUriResponse.uri
                     _selectedTripPlaceImage.update { uri }
+                    if (uri != null) {
+                        getImageByteArray(uri.toString())
+                    }
+
                 }
                 ?.addOnFailureListener { exception ->
                     if (exception is ApiException) {
@@ -220,33 +247,85 @@ class MapViewModel : ViewModel() {
         }
 
 
-        // Get the photo metadata.
+//         Get the photo metadata.
 
 
-        // Create a FetchPhotoRequest.
-        val photoRequest = FetchPhotoRequest.builder(photoMetadata)
-            .setMaxWidth(500) // Optional.
-            .setMaxHeight(300) // Optional.
-            .build()
-        placesClient?.fetchPhoto(photoRequest)
-            ?.addOnSuccessListener { fetchPhotoResponse: FetchPhotoResponse ->
-                val bitmap = fetchPhotoResponse.bitmap
-                _selectedTripPlaceBit.update { bitmap }
-
-            }?.addOnFailureListener { exception: Exception ->
-                if (exception is ApiException) {
-                    Log.e("TAG", "Place not found: " + exception.message)
-                    val statusCode = exception.statusCode
-                    TODO("Handle error with given status code.")
-                }
-            }
+//         Create a FetchPhotoRequest.
+//        val photoRequest = FetchPhotoRequest.builder(photoMetadata)
+//            .setMaxWidth(500) // Optional.
+//            .setMaxHeight(300) // Optional.
+//            .build()
+//        placesClient?.fetchPhoto(photoRequest)
+//            ?.addOnSuccessListener { fetchPhotoResponse: FetchPhotoResponse ->
+//                val bitmap = fetchPhotoResponse.bitmap
+//                _selectedTripPlaceBit.update { bitmap}
+//
+//                Log.d("PlaceBit", bitmap.toString())
+//
+//            }?.addOnFailureListener { exception: Exception ->
+//                if (exception is ApiException) {
+//                    Log.e("TAG", "Place not found: " + exception.message)
+//                    val statusCode = exception.statusCode
+//                    TODO("Handle error with given status code.")
+//                }
+//            }
     }
 
     fun consumeToastRequest() {
         _toastRequest.update { null }
     }
+
     fun consumeCheckSearch() {
         _checkSearch.update { null }
+    }
+
+    suspend fun downloadImageAsync(imageUrl: String): ByteArray = withContext(Dispatchers.IO) {
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(imageUrl)
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("Failed to download image: ${response.code}")
+            }
+            return@withContext response.body?.bytes() ?: throw IOException("Empty response body")
+        }
+    }
+
+    fun getImageByteArray(url: String) {
+        viewModelScope.launch {
+            try {
+                val bytes = downloadImageAsync(url)
+                val compressBytes = compressByQuality(bytes, 2)
+
+                Log.d("getImageByteArray", bytes.toString())
+                _selectedTripPlaceByte.update { compressBytes }
+                // 處理圖片字節數組
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * 方法1: 使用 Quality 壓縮
+     * @param imageBytes 原始圖片的 byte array
+     * @param quality 壓縮品質 (0-100)
+     * @return 壓縮後的 byte array
+     */
+    fun compressByQuality(imageBytes: ByteArray, quality: Int): ByteArray {
+        // 將 byte array 轉換為 Bitmap
+        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+        // 創建一個 ByteArrayOutputStream
+        val outputStream = ByteArrayOutputStream()
+
+        // 使用 compress 方法壓縮圖片
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+
+        // 回傳壓縮後的 byte array
+        return outputStream.toByteArray()
     }
 }
 

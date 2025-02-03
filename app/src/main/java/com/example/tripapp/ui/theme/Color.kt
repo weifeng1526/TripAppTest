@@ -14,7 +14,8 @@ val Pink40 = Color(0xFF7D5260)
 
 // 新的顏色設定
 val green100 = Color(0xFFBBDDD1)
-val green200 = Color(0xFF608E7E)
+val green200 = Color(0xFF32C491)
+val green300 = Color(0xFF608E7E)
 
 val red100 = Color(0xFFEE8F8D)
 val red200 = Color(0xFFF1686D)

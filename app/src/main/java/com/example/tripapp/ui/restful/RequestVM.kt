@@ -9,7 +9,9 @@ import com.example.tripapp.ui.feature.trip.dataObjects.Destination
 import com.example.tripapp.ui.feature.trip.dataObjects.Plan
 import com.example.tripapp.ui.feature.trip.dataObjects.Poi
 import com.ron.restdemo.RetrofitInstance
+import com.squareup.okhttp.Request
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 
 /** 以下都還只是宣告，在coroutineScope呼叫才可使用RetrofitInstance發出API */
@@ -50,6 +52,18 @@ class RequestVM : ViewModel() {
             return null
         }
     }
+
+    suspend fun GetPlansOfMemberInCrew(id: Int): List<Plan> {
+        try {
+            val response = RetrofitInstance.api.GetPlansOfMemberInCrew(id)
+            Log.d(tag, "data: ${response}")
+            return response
+        } catch (e: Exception) {
+            Log.e(tag, "error: ${e.message}")
+            return emptyList()
+        }
+    }
+
     /** 更新一筆Plan */
     suspend fun UpdatePlan(request: Plan): Plan? {
         try {
@@ -205,9 +219,38 @@ class RequestVM : ViewModel() {
         }
     }
 
-    suspend fun UpdatePostWithImage(image: MultipartBody.Part?) {
+    suspend fun UpdateCrewMmeber(crewMmeber: CrewMmeber): CrewMmeber? {
         try {
-            val response = RetrofitInstance.api.updatePostWithImage(image)
+            val response = RetrofitInstance.api.UpdateCrewMmeber(crewMmeber)
+            Log.d(tag, "data: ${response}")
+            return response
+        } catch (e: Exception) {
+            Log.e(tag, "error: ${e.message}")
+            return null
+        }
+    }
+
+//    suspend fun updatePlanImage(schId: RequestBody, image: MultipartBody.Part?) {
+//        try {
+//            val response = RetrofitInstance.api.updatePostWithImage(schId, image)
+//            Log.d(tag, "data: ${response}")
+//        } catch (e: Exception) {
+//            Log.e(tag, "error: ${e.message}")
+//        }
+//    }
+
+//    suspend fun UpdatePlanImage(image: MultipartBody.Part?) {
+//        try {
+//            val response = RetrofitInstance.api.UpdatePlanImage(image)
+//            Log.d(tag, "data: ${response}")
+//        } catch (e: Exception) {
+//            Log.e(tag, "error: ${e.message}")
+//        }
+//    }
+
+    suspend fun UpdatePlanImage(schId: RequestBody, image: MultipartBody.Part?) {
+        try {
+            val response = RetrofitInstance.api.UpdatePlanImage(schId, image)
             Log.d(tag, "data: ${response}")
         } catch (e: Exception) {
             Log.e(tag, "error: ${e.message}")

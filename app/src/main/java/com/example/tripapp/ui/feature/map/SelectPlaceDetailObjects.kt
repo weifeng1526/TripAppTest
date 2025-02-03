@@ -16,6 +16,7 @@ data class SelectPlaceDetail(
     var dstStart: String = "00:00:00",
     var dstEnd: String = "00:00:00",
     var dstInr: String = "00:00:00",
+    var dstPic :ByteArray
 )
 //回傳
 data class PlaceDetail(

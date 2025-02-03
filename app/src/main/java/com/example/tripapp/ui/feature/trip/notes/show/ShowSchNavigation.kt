@@ -1,5 +1,6 @@
 package com.example.tripapp.ui.feature.trip.notes.show
 
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -23,8 +24,8 @@ fun NavGraphBuilder.showSchRoute(navController: NavController) {
 //            schNo = 1
             schNo = BackStackEntry.arguments?.getString("sch_no").let { it?.toIntOrNull() ?: 0 },
             requestVM = RequestVM(),
-            planEditViewModel = PlanEditViewModel(),
-            planHomeViewModel = PlanHomeViewModel(),
+            planEditViewModel = viewModel(),
+            planHomeViewModel = viewModel(),
             destination = Destination(),
         )
     }

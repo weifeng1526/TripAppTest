@@ -11,7 +11,7 @@ fun genSpendingNavigationRoute() = SPENDING_LIST_ROUTE
 
 fun NavGraphBuilder.spendingListRoute(navController: NavHostController) {
     composable(
-        route = SPENDING_LIST_ROUTE,
+        route = SPENDING_LIST_ROUTE
     ) {
         SpendingListRoute(navController)
     }

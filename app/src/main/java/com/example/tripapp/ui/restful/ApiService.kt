@@ -16,10 +16,10 @@ import com.example.tripapp.ui.feature.spending.CrewRecord
 import com.example.tripapp.ui.feature.spending.PostSpendingRecord
 import com.example.tripapp.ui.feature.trip.dataObjects.CrewMmeber
 import com.example.tripapp.ui.feature.trip.dataObjects.DeleteDstResponse
-import com.squareup.okhttp.RequestBody
 import okhttp3.MultipartBody
 import retrofit2.Response
 import com.example.tripapp.ui.feature.trip.dataObjects.Notes
+import okhttp3.RequestBody
 import retrofit2.http.GET
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -46,6 +46,9 @@ interface ApiService {
     @GET("sched/get_all")
     suspend fun GetPlans(): List<Plan>
 
+    @GET("sched/getAllFromCrew/mem_id")
+    suspend fun GetPlansOfMemberInCrew(@Query("id") id: Int): List<Plan>
+
     @POST("sched/create")
     suspend fun CreatePlan(@Body request: Plan): Plan
 
@@ -62,6 +65,9 @@ interface ApiService {
 //    suspend fun GetCrewMmebers(@Query("schId") id: Int): List<CrewMmeber>
     @GET("sched/memberInCrew/getBySchId")
     suspend fun GetCrewMmebers(@Query("schId") id: Int): List<CrewMmeber>
+
+    @PUT("sched/crew/update")
+    suspend fun UpdateCrewMmeber(@Body request: CrewMmeber): CrewMmeber
 
     @PUT("sched/update")
     suspend fun UpdatePlan(@Body request: Plan): Plan
@@ -93,9 +99,16 @@ interface ApiService {
     @GET("sched/getDestsSample")
     suspend fun GetDestsSample(@Query("memId") memId: Int, @Query("schId") schId: Int): List<Destination>
 
+//    @Multipart
+//    @PUT("sched/image")
+//    suspend fun UpdatePlanImage(
+//        @Part image: MultipartBody.Part?
+//    ): Response<Unit>
+
     @Multipart
     @PUT("sched/image")
-    suspend fun updatePostWithImage(
+    suspend fun UpdatePlanImage(
+        @Part ("schId") schId: RequestBody,
         @Part image: MultipartBody.Part?
     ): Response<Unit>
 
@@ -112,7 +125,6 @@ interface ApiService {
 
     @POST("member/signup")
     suspend fun signup(@Body request: SignUpRequest): Member
-    //
 
     //ㄒㄒ
 
@@ -130,29 +142,51 @@ interface ApiService {
         @Query("schNo") schNo: Int
     ): List<BagItems>
 
-    @POST("item/add")
-    suspend fun AddBagItem(@Body bagListEntry: BagList): Unit
+    @GET("item/getexist")
+    suspend fun GetItemsIfExist(
+        @Query("memNo") memNo: Int, @Query("schNo") schNo: Int
+    ):List<Item>
+
+    @POST("bag/add")
+    suspend fun AddBagItem(@Body bagListEntry: BagList): List<BagList>
+
+    @DELETE("bag/delete")
+    suspend fun DeleteBagItem(@Query("memNo")memNo: Int,@Query("schNo")schNo: Int,@Query("itemNo")itemNo: Int):List<Item>
+
+    @PUT("bag/update")
+    suspend fun UpdateReadyStatus(@Body bagList: BagList): Response<Unit>
 
     //盧比
     //1 呼叫API
-    @GET("spending/findTripsSpendingAll") //可以用
+    @GET("spending/findTripsSpendingAll") //根據會員編號找尋消費明細
     suspend fun getSpendingList(@Query("memNo") memNo: Int): List<SpendingRecord>
 
-    @GET("spending/findOneTripsSpending")  //
+    @GET("spending/findOneTripsSpending")  //根據消費明細編號尋找單筆消費
     suspend fun getOneSpendingList(@Query("costNo") costNo: Int): SpendingRecord
 
-    @GET("spending/findTripCrew")  //找旅伴
+    @GET("spending/findTripCrew")  //根據行程編號找團員
     suspend fun findTripCrew(@Query("schNo") schNo: Int): List<CrewRecord>?
 
-    @GET("spending/findTripName") //找到旅程名稱
+    @GET("spending/findTripName") //根據會員編號找到旅程名稱
     suspend fun findTripName(@Query("memNo") memNo:Int): List<CrewRecord>
 
-    @GET("spending/findTripCur") //找到旅程幣別與結算幣別
+    @GET("spending/findTripCur") //根據行程編號找到旅行幣別與結算幣別
     suspend fun findTripCur(@Query("schNo") schNo:Int): List<CrewRecord>
 
-    @POST("spending/addlistController") //儲存
+    @POST("spending/addlistController") //新增消費明細編資料insert
     //丟的內容要跟後端設定的一致 request:PostSpendingRecord（類別：規格）
+    suspend fun addlistController(@Body request:PostSpendingRecord)
+
+    @POST("spending/saveOneTripsSpending") //修改消費明細編資料update
+    //丟的內容要跟後端設定的一致 request:PostSpendingRecord（類別：規格）
+    //fetch(API) / get(本地端--偏好設定) 都是在接api的代名詞
     suspend fun saveOneTripsSpending(@Body request:PostSpendingRecord)
+
+    @GET("spending/removeOneTripsSpending") //刪除該筆紀錄
+    suspend fun removeOneTripsSpending(@Query("costNo") costNo:Int)
+
+
+
 
     //雅勳
     //陶喆
@@ -164,6 +198,9 @@ interface ApiService {
 
     @POST("notes/creat")
     suspend fun CreateNotes(@Body request: Notes): Notes
+
+    @GET("notes/getImage")
+    suspend fun GetImage(@Query("dstNo") dstNo: Int) : Destination
     //致意
 }
 

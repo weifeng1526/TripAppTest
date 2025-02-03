@@ -47,8 +47,8 @@ class PlanCreateViewModel : ViewModel() {
                     crewNo = 0
                     schNo = plan.schNo
                     memNo = plan.memNo
-                    crewPeri = 3
-                    crewIde = 1
+                    crewPeri = 2
+                    crewIde = 2
                     crewName = plan.schName
                     crewInvited = 3
                 }

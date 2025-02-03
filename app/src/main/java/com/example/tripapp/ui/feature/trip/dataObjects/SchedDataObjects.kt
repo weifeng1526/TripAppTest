@@ -37,7 +37,7 @@ data class Destination(
     var poiNo: Int = 0,        // 地點編號
     var dstName: String = "",  // 景點名稱
     var dstAddr: String = "",  // 景點地址
-    var dstPic: ByteArray? = null,  // 景點圖片
+    var dstPic: ByteArray? = ByteArray(0),  // 景點圖片
     var dstDep: String = "",   // 描述
     var dstDate: String = "",  // 日期
     var dstStart: String = "", // 開始時間

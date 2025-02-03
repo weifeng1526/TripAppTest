@@ -18,7 +18,7 @@ val SPENDING_EDIT_ARGS_SCHNO = "costno"
 // 頁面的真正的路徑
 val SPENDING_ADD_ROUTE = "$SPENDING_ADD_KEYID/{$SPENDING_ADD_ARGS_SCHNO}/{$SPENDING_EDIT_ARGS_SCHNO}"
 
-fun getSpendingAddNavigationRoute(schno: Int, cost:Int) = "$SPENDING_ADD_KEYID/$schno/$cost"
+fun getSpendingAddNavigationRoute(schNo: Int, costNo:Int) = "$SPENDING_ADD_KEYID/$schNo/$costNo"
 
 fun NavGraphBuilder.spendingAddRoute(navController: NavHostController) {
     composable(
@@ -28,10 +28,10 @@ fun NavGraphBuilder.spendingAddRoute(navController: NavHostController) {
             navArgument(SPENDING_EDIT_ARGS_SCHNO) { type = NavType.IntType }
         )
     ) {
-        val schno = it.arguments?.getInt(SPENDING_ADD_ARGS_SCHNO, 0) ?: 0
-        val costno = it.arguments?.getInt(SPENDING_EDIT_ARGS_SCHNO, 0) ?: 0
-        Log.d("tag","schno: $schno, costno $costno")
-        SpendingAddRoute(navHostController = navController, schNo = schno, costNo=costno)
+        val schNo = it.arguments?.getInt(SPENDING_ADD_ARGS_SCHNO, 0) ?: 0
+        val costNo = it.arguments?.getInt(SPENDING_EDIT_ARGS_SCHNO, 0) ?: 0
+        Log.d("tag","schNo: $schNo, costno $costNo")
+        SpendingAddRoute(navHostController = navController, schNo = schNo, costNo=costNo)
 
     }
 }

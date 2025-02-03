@@ -45,11 +45,11 @@ class TotalSumVM:ViewModel(){
             ),
             TotalSum(
                 userName = "小美",
-                totalSum = "4000",
+                totalSum = "+4000",
             ),
             TotalSum(
                 userName = "胖虎",
-                totalSum = "3000",
+                totalSum = "+3000",
             )
         )
 

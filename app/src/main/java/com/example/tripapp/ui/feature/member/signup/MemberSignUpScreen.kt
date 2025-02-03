@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.OutlinedTextField
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
@@ -50,6 +52,8 @@ import com.example.tripapp.ui.feature.member.login.MemberLoginScreen
 import com.example.tripapp.ui.feature.member.turfav.TUR_FAV_ROUTE
 import com.example.tripapp.ui.feature.trip.plan.home.PLAN_HOME_ROUTE
 import com.example.tripapp.ui.theme.black600
+import com.example.tripapp.ui.theme.black900
+import com.example.tripapp.ui.theme.purple100
 import com.example.tripapp.ui.theme.purple200
 import com.example.tripapp.ui.theme.white200
 import com.example.tripapp.ui.theme.white300
@@ -65,8 +69,8 @@ fun MemberSignUpRoute(
     MemberSignUpScreen(
         viewModel = viewModel,
 //        onPlanHomeClick = { navController.navigate(PLAN_HOME_ROUTE) },
-        onLoginClick =  { navController.navigate(MEMBER_LOGIN_ROUTE) },
-        )
+        onLoginClick = { navController.navigate(MEMBER_LOGIN_ROUTE) },
+    )
 }
 
 @Preview
@@ -110,11 +114,12 @@ fun MemberSignUpScreen(
     ) {
         //logo圖案要再改
         Image(
-            painter = painterResource(R.drawable.lets_icons__suitcase_light),
+            painter = painterResource(R.drawable.trip_icon),
             contentDescription = "AppLogo",
             modifier = Modifier
-                .padding(top = 16.dp)
+                .padding(top = 28.dp)
                 .size(70.dp)
+                .clip(CircleShape)
                 .graphicsLayer {
                     this.alpha = 0.5f
                 }
@@ -295,7 +300,7 @@ fun MemberSignUpScreen(
 
         if (!errorMessage.isNullOrBlank()) {
             Text(
-                text = errorMessage?: "",
+                text = errorMessage ?: "",
                 color = Color.Red,
                 modifier = Modifier
                     .padding(8.dp)
@@ -309,6 +314,7 @@ fun MemberSignUpScreen(
                     email.isBlank() -> viewModel.showErrorMessage("請輸入電子郵件")
                     !email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\\.[a-zA-Z]{2,})?$".toRegex()) ->
                         viewModel.showErrorMessage("電子郵件格式不正確")
+
                     name.isBlank() -> viewModel.showErrorMessage("請輸入暱稱")
                     name.length !in 1..30 -> viewModel.showErrorMessage("暱稱必須在1至30個字元之間")
                     password.isBlank() || confirmPassword.isBlank() -> viewModel.showErrorMessage("請輸入密碼與確認密碼")
@@ -334,6 +340,24 @@ fun MemberSignUpScreen(
                 text = "註冊",
                 fontSize = 16.sp,
                 color = white300
+            )
+        }
+        Spacer(modifier = Modifier.padding(4.dp))
+
+        Button(
+            onClick = { onLoginClick() },
+            //,
+            enabled = isButtonEnabled,
+            modifier = Modifier
+                .padding(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = purple100
+            )
+        ) {
+            Text(
+                text = "返回",
+                fontSize = 16.sp,
+                color = black900
             )
         }
     }

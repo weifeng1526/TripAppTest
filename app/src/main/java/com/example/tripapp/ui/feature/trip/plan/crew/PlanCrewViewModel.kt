@@ -54,6 +54,12 @@ class PlanCrewViewModel: ViewModel() {
         _crewOfMembersSatate.update { crewMembers }
     }
 
+    fun removeCrewMember(crewMember: CrewMmeber) {
+        _crewOfMembersSatate.update { currentList ->
+            currentList.toMutableList().apply { remove(crewMember) }
+        }
+    }
+
     fun addToCrews(crewMmeber: CrewMmeber) {
         val crewMmebers = _crewOfMembersSatate.value.toMutableList()
         _crewOfMembersSatate.update {
@@ -61,11 +67,13 @@ class PlanCrewViewModel: ViewModel() {
             crewMmebers
         }
     }
-    fun removeFromCrews(crewMmeber: CrewMmeber) {
-        val crewMmebers = _crewOfMembersSatate.value.toMutableList()
-        _crewOfMembersSatate.update {
-            crewMmebers.remove(crewMmeber)
-            crewMmebers
+    fun updateMemberCrewByApi(crewMmeber: CrewMmeber) {
+        viewModelScope.launch {
+            val response = requestVM.UpdateCrewMmeber(crewMmeber)
+            response?.let {
+                setCrewMember(crewMmeber)
+                Log.d("crewMmeberUpdate", "${it}}")
+            }
         }
     }
 

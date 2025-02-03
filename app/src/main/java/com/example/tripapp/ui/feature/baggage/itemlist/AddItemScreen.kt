@@ -45,10 +45,10 @@ fun AddItemScreen(
     schNo: Int, // 添加 schNo 參數
     addItemViewModel: AddItemViewModel = viewModel()
 ) {
-    val  memNo = GetUid(MemberRepository)
+    val memNo = GetUid(MemberRepository)
     // 確保在初次進入頁面時呼叫 fetchData()
     LaunchedEffect(Unit) {
-        addItemViewModel.fetchData()
+        addItemViewModel.fetchData(memNo, schNo)
     }
 
     Column(
@@ -87,7 +87,7 @@ fun AddItemScreen(
             // 儲存變更
             IconButton(onClick = {
                 navController.popBackStack() // 返回行李
-                addItemViewModel.saveSelectedItems( memNo , schNo )
+                addItemViewModel.saveSelectedItems(memNo, schNo)
                 Log.d("AddItemScreen", "${memNo}, ${schNo}")
             }) {
                 Icon(
@@ -121,8 +121,6 @@ fun AddItemScreen(
             onCheckedChange = { itemNo, isChecked ->
                 addItemViewModel.updateCheckedState(itemNo, isChecked)
             },
-
-
             editingItem = editingItem,
             editedText = editedText,
             innerPadding = PaddingValues(12.dp),
@@ -161,8 +159,9 @@ fun ExpandableLists(
 
                     Column(
                         modifier = Modifier
-                            .width(317.dp)
-                            .border(1.dp, Color(0x8065558F), RoundedCornerShape(10.dp))
+                            .width(300.dp)
+                            .border(1.dp, 
+                                colorResource(id = R.color.purple_200), RoundedCornerShape(10.dp))
                     ) {
                         Row(
                             modifier = Modifier
@@ -196,7 +195,7 @@ fun ExpandableLists(
 
                                     Row(
                                         modifier = Modifier
-                                            .width(317.dp)
+                                            .width(300.dp)
                                             .height(52.dp)
                                             .border(
                                                 1.dp,
@@ -204,14 +203,14 @@ fun ExpandableLists(
                                                 RoundedCornerShape(10.dp)
                                             )
                                             .background(
-                                                if (isChecked) colorResource(id = R.color.purple_200)
-                                                else colorResource(id = R.color.purple_100),
+                                                if (isChecked) colorResource(id = R.color.purple_100)
+                                                else colorResource(id = R.color.white_400),
                                                 RoundedCornerShape(10.dp)
                                             )
                                             .padding(
-                                                start = 20.dp,
+                                                start = 30.dp,
 //                                                top = 2.dp,
-                                                end = 20.dp,
+                                                end = 30.dp,
 //                                                bottom = 2.dp
                                             )
                                             .clickable { onCheckedChange(item.itemNo, !isChecked) },
@@ -222,6 +221,9 @@ fun ExpandableLists(
                                                 .size(24.dp)
                                                 .clickable {
                                                     onCheckedChange(
+                                                        item.itemNo, !isChecked
+                                                    )
+                                                    addItemViewModel.updateChangeState(
                                                         item.itemNo,
                                                         !isChecked
                                                     )
@@ -229,9 +231,10 @@ fun ExpandableLists(
                                             painter = if (isChecked) painterResource(id = R.drawable.ashley_pickoption02) else painterResource(
                                                 id = R.drawable.ashley_pickoption01
                                             ),
-                                            contentDescription = if (isChecked) "已選擇" else "未選擇"
+                                            contentDescription = if (isChecked) "已選擇" else "未選擇",
+                                            tint = if (isChecked) colorResource(id = R.color.purple_400) else colorResource(id = R.color.purple_300)
                                         )
-                                        Spacer(modifier = Modifier.width(24.dp))
+                                        Spacer(modifier = Modifier.width(40.dp))
                                         Text(text = item.itemName, modifier = Modifier.weight(1f))
 
 //                                        // 當物品處於編輯模式時顯示 TextField，否則顯示文字

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.OutlinedTextField
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -108,11 +110,12 @@ fun MemberLoginScreen(
     ) {
         //logo圖案要再改
         Image(
-            painter = painterResource(R.drawable.lets_icons__suitcase_light),
+            painter = painterResource(R.drawable.trip_icon),
             contentDescription = "AppLogo",
             modifier = Modifier
-                .padding(top = 16.dp)
+                .padding(top = 28.dp)
                 .size(70.dp)
+                .clip(CircleShape)
                 .graphicsLayer {
                     this.alpha = 0.5f
                 }

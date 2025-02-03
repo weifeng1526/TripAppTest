@@ -15,6 +15,6 @@
     <string name="member">會員中心</string>
     <string name="productNum_format">商品編號 : %s</string>
     <string name="productname_format">商品名稱 : %s</string>
-    <string name="price_format">商品價格 : %d</string>
+    <string name="price_format">商品價格 : $%d元</string>
     <string name="longDescription_format">商品介紹 : %s</string>
 </resources>

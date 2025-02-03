@@ -29,7 +29,7 @@ fun NavGraphBuilder.addItemScreenRoute(navController: NavHostController) {
     composable(
         route = "$ADDITEM_NAVIGATION_ROUTE/{schNo}",
         arguments = listOf(navArgument("schNo") { type = NavType.IntType })
-    ) {backStackEntry ->
+    ) { backStackEntry ->
         val schNo = backStackEntry.arguments?.getInt("schNo") ?: 0 // 使用 getInt 獲取 schNo 參數
         Log.d("AddItemScreenRoute", "schNo: $schNo") // 輸出 schNo 的值到 Logcat
         AddItemRoute(
