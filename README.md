@@ -84,4 +84,4 @@ Travel Mate 是一款專為旅遊規劃設計的 APP，提供 **行程管理、�
 
 如果您有任何問題或建議，歡迎透過以下方式聯繫：
 
-[GitHub Issues](https://github.com/weifeng1526/TripApp/issues)
+[GitHub Issues](https://github.com/weifeng1526/TripAppTest/issues)
